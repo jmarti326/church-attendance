@@ -93,7 +93,9 @@ export default function MembersPage() {
             { value: "member", label: "Miembros" },
             { value: "visitor", label: "Visitantes" },
             { value: "members_class", label: "Clase" },
+            { value: "pastor", label: "Pastor" },
             { value: "inactive", label: "Inactivos" },
+            { value: "fallecido", label: "Fallecidos" },
           ].map((f) => (
             <button
               key={f.value}

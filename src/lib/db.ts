@@ -7,7 +7,7 @@ export interface LocalMember {
   lastName: string;
   phone?: string;
   address?: string;
-  status: "member" | "visitor" | "members_class" | "inactive";
+  status: "member" | "visitor" | "members_class" | "inactive" | "pastor" | "fallecido";
   familyId?: number;
   synced?: boolean;
 }

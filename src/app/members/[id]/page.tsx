@@ -186,7 +186,9 @@ export default function MemberDetailPage() {
               { value: "member", label: "Miembro", emoji: "✅" },
               { value: "visitor", label: "Visitante", emoji: "👋" },
               { value: "members_class", label: "En Clase", emoji: "📖" },
+              { value: "pastor", label: "Pastor", emoji: "⛪" },
               { value: "inactive", label: "Inactivo", emoji: "⏸️" },
+              { value: "fallecido", label: "Fallecido", emoji: "🕊️" },
             ] as const).map((s) => (
               <button
                 key={s.value}

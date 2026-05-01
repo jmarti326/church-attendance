@@ -88,7 +88,7 @@ export default function BatchUploadPage() {
               obligatorios
             </li>
             <li>
-              <strong>status</strong>: member, visitor, members_class, inactive
+              <strong>status</strong>: member, visitor, members_class, pastor, inactive, fallecido
             </li>
             <li>
               <strong>familyGroup</strong>: nombre del grupo familiar (los que
