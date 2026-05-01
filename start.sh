@@ -1,8 +1,14 @@
 #!/bin/sh
 set -e
 
-echo "🔧 Running database migrations..."
-npx prisma db push --skip-generate 2>/dev/null || echo "⚠️ Migration skipped (prisma not in path, DB may already exist)"
+# If database doesn't exist, create it from the template (has schema already applied)
+if [ ! -f /data/church.db ]; then
+  echo "Creating database from template..."
+  cp /app/template.db /data/church.db
+  echo "Database created."
+else
+  echo "Database already exists."
+fi
 
-echo "🚀 Starting application..."
+echo "Starting application..."
 exec node server.js
