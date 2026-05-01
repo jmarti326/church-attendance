@@ -10,7 +10,7 @@ interface BatchMemberRow {
   familyGroup?: string;
 }
 
-const VALID_STATUSES = ["member", "visitor", "members_class", "inactive"];
+const VALID_STATUSES = ["member", "visitor", "members_class", "inactive", "pastor", "fallecido"];
 
 function parseCSV(text: string): BatchMemberRow[] {
   const lines = text.trim().split(/\r?\n/);

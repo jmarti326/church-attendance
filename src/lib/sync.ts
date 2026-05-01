@@ -8,7 +8,7 @@ interface ServerMember {
   lastName: string;
   phone?: string;
   address?: string;
-  status: "member" | "visitor" | "members_class" | "inactive";
+  status: "member" | "visitor" | "members_class" | "inactive" | "pastor" | "fallecido";
   familyId?: number;
   family?: { id: number; name: string };
 }
@@ -209,7 +209,7 @@ export class SyncService {
    * Get members from local DB (offline-first)
    */
   static async getLocalMembers(): Promise<LocalMember[]> {
-    return db.members.where("status").notEqual("inactive").toArray();
+    return db.members.where("status").noneOf(["inactive", "pastor", "fallecido"]).toArray();
   }
 
   /**

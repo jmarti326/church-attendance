@@ -22,7 +22,7 @@ export default function AttendancePage() {
   const [saving, setSaving] = useState(false);
 
   const activeMembers = useMemo(
-    () => members.filter((m) => m.status !== "inactive"),
+    () => members.filter((m) => m.status !== "inactive" && m.status !== "pastor" && m.status !== "fallecido"),
     [members]
   );
 
