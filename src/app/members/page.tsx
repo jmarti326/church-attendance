@@ -1,15 +1,27 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
 import { useMembers } from "@/lib/hooks";
 import { SyncService } from "@/lib/sync";
 
+interface Family {
+  id: number;
+  name: string;
+}
+
 export default function MembersPage() {
+  const router = useRouter();
   const { members, loading, syncStatus, isOnline, triggerSync, reload } = useMembers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showAdd, setShowAdd] = useState(false);
+  const [families, setFamilies] = useState<Family[]>([]);
+
+  useEffect(() => {
+    fetch("/api/families").then((r) => r.json()).then(setFamilies).catch(() => {});
+  }, []);
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
@@ -22,7 +34,6 @@ export default function MembersPage() {
     });
   }, [members, search, statusFilter]);
 
-  // Group by familyId
   const grouped = useMemo(() => {
     const groups: Record<string, typeof filtered> = {};
     for (const m of filtered) {
@@ -92,22 +103,24 @@ export default function MembersPage() {
         </div>
       </div>
 
-      {/* Offline banner */}
       {!isOnline && (
         <div className="mx-4 mt-2 px-3 py-2 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-800">
           Sin conexion. Los datos se muestran desde cache local.
         </div>
       )}
 
-      {/* Add Member Form */}
-      {showAdd && <AddMemberForm onClose={() => setShowAdd(false)} onSaved={reload} />}
+      {showAdd && (
+        <AddMemberForm
+          families={families}
+          onClose={() => setShowAdd(false)}
+          onSaved={() => { reload(); fetch("/api/families").then(r => r.json()).then(setFamilies).catch(() => {}); }}
+        />
+      )}
 
-      {/* Count */}
       <div className="px-4 py-2">
         <p className="text-xs text-gray-500">{filtered.length} miembros</p>
       </div>
 
-      {/* Member list */}
       {loading ? (
         <div className="flex items-center justify-center h-32">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
@@ -118,13 +131,14 @@ export default function MembersPage() {
             <div key={key} className="mb-3">
               {familyMembers.length > 1 && (
                 <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 px-1">
-                  {familyMembers[0].lastName}
+                  🏠 {familyMembers[0].lastName.split(" ")[0]}
                 </h3>
               )}
               {familyMembers.map((m) => (
-                <div
+                <button
                   key={m.id || m.serverId}
-                  className="flex items-center justify-between px-3 py-2.5 bg-white rounded-lg border border-gray-100 mb-1"
+                  onClick={() => router.push(`/members/${m.serverId || m.id}`)}
+                  className="w-full flex items-center justify-between px-3 py-2.5 bg-white rounded-lg border border-gray-100 mb-1 active:bg-gray-50 transition-colors text-left"
                 >
                   <div>
                     <p className="text-sm font-medium text-gray-900">
@@ -132,8 +146,11 @@ export default function MembersPage() {
                     </p>
                     {m.phone && <p className="text-xs text-gray-500">{m.phone}</p>}
                   </div>
-                  <StatusBadge status={m.status} />
-                </div>
+                  <div className="flex items-center gap-2">
+                    <StatusBadge status={m.status} />
+                    <span className="text-gray-300 text-sm">›</span>
+                  </div>
+                </button>
               ))}
             </div>
           ))}
@@ -143,24 +160,67 @@ export default function MembersPage() {
   );
 }
 
-function AddMemberForm({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
+function AddMemberForm({
+  families,
+  onClose,
+  onSaved,
+}: {
+  families: Family[];
+  onClose: () => void;
+  onSaved: () => void;
+}) {
   const [form, setForm] = useState({
     firstName: "",
     lastName: "",
     phone: "",
     status: "visitor" as MemberStatus,
+    familyId: "" as string,
+    newFamilyName: "",
   });
   const [saving, setSaving] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
-    await SyncService.pushNewMember({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      phone: form.phone || undefined,
-      status: form.status,
-    });
+
+    let familyId: number | null = form.familyId ? parseInt(form.familyId) : null;
+
+    // Create new family if specified
+    if (form.newFamilyName.trim()) {
+      const res = await fetch("/api/families", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: form.newFamilyName.trim() }),
+      });
+      if (res.ok) {
+        const newFamily = await res.json();
+        familyId = newFamily.id;
+      }
+    }
+
+    // Create member via API (also saves offline via SyncService)
+    if (navigator.onLine) {
+      await fetch("/api/members", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          phone: form.phone || null,
+          status: form.status,
+          familyId,
+        }),
+      });
+    } else {
+      await SyncService.pushNewMember({
+        firstName: form.firstName,
+        lastName: form.lastName,
+        phone: form.phone || undefined,
+        status: form.status,
+        familyId: familyId || undefined,
+      });
+    }
+
     setSaving(false);
     onSaved();
     onClose();
@@ -190,15 +250,47 @@ function AddMemberForm({ onClose, onSaved }: { onClose: () => void; onSaved: () 
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
           className="w-full border rounded-lg px-3 py-2 text-sm"
         />
+
+        {/* Status */}
+        <div className="grid grid-cols-2 gap-1.5">
+          {([
+            { value: "member", label: "Miembro", emoji: "✅" },
+            { value: "visitor", label: "Visitante", emoji: "👋" },
+            { value: "members_class", label: "En Clase", emoji: "📖" },
+            { value: "inactive", label: "Inactivo", emoji: "⏸️" },
+          ] as const).map((s) => (
+            <button
+              key={s.value}
+              type="button"
+              onClick={() => setForm({ ...form, status: s.value })}
+              className={`px-2 py-2 rounded-lg border text-xs font-medium flex items-center gap-1 ${
+                form.status === s.value
+                  ? "border-indigo-500 bg-indigo-50 text-indigo-700"
+                  : "border-gray-200 text-gray-600"
+              }`}
+            >
+              <span>{s.emoji}</span> {s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Family */}
         <select
-          value={form.status}
-          onChange={(e) => setForm({ ...form, status: e.target.value as MemberStatus })}
+          value={form.familyId}
+          onChange={(e) => setForm({ ...form, familyId: e.target.value, newFamilyName: "" })}
           className="w-full border rounded-lg px-3 py-2 text-sm"
         >
-          <option value="member">Miembro</option>
-          <option value="visitor">Visitante</option>
-          <option value="members_class">Clase de Miembros</option>
+          <option value="">Sin familia</option>
+          {families.map((f) => (
+            <option key={f.id} value={f.id.toString()}>{f.name}</option>
+          ))}
         </select>
+        <input
+          value={form.newFamilyName}
+          onChange={(e) => setForm({ ...form, newFamilyName: e.target.value, familyId: "" })}
+          placeholder="O crear nueva familia..."
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
       </div>
       <div className="flex gap-2 mt-3">
         <button type="button" onClick={onClose} className="flex-1 py-2 border rounded-lg text-sm">
