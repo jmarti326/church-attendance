@@ -1,0 +1,18 @@
+{
+  "name": "Iglesia Asistencia",
+  "short_name": "Asistencia",
+  "description": "Control de asistencia de la iglesia",
+  "start_url": "/attendance",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#4f46e5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
