@@ -1,0 +1,58 @@
+firstName,lastName,phone,address,status,familyGroup
+Eduardo,Ramirez Lopez,,,member,Ramirez
+Carmen,Torres Vega,,,member,Ramirez
+Luis A.,Ramirez Torres,,,member,Ramirez
+Sofia,Ramirez Torres,,,member,Ramirez
+Daniela,Ramirez Torres,,,member,Ramirez
+Miguel,Gonzalez Ruiz,,,member,Gonzalez
+Ana,Rivera Colon,,,member,Gonzalez
+Gabriel,Gonzalez Rivera,,,member,Gonzalez
+Jorge,Herrera Santana,,,member,Herrera
+Lucia,Herrera Mendez,,,member,Herrera
+Ricardo,Santos Ocasio,,,member,Santos
+Patricia,Vargas Nieves,,,member,Santos
+Alejandro,Santos Vargas,,,member,Santos
+Valeria,Santos Vargas,,,member,Santos
+Rosa,Mendoza,,,member,Mendoza
+Fernando,Delgado Cruz,,,member,Delgado
+Isabel,Ortiz Marrero,,,member,Delgado
+Hector,Navarro,,,member,Navarro
+David,Figueroa Ramos,,,member,Figueroa
+Marta,Acosta Diaz,,,member,Figueroa
+Samuel,Figueroa Acosta,,,member,Figueroa
+Andrea,Moreno,,,visitor,Moreno
+Oscar,Castillo Velez,,,member,Castillo
+Beatriz,Rojas Santiago,,,member,Castillo
+Victor,Pena,,,member,Pena
+Andres,Soto Maldonado,,,member,Soto
+Yolanda,Medina Colon,,,member,Soto
+Marcos,Soto Medina,,,member,Soto
+Camila,Soto Medina,,,member,Soto
+Roberto,Villanueva,,,visitor,Villanueva
+Graciela,Aguirre,,,member,Aguirre
+Enrique,Salazar Aponte,,,member,Salazar
+Natalia,Reyes Lugo,,,member,Salazar
+Emilio,Salazar Reyes,,,member,Salazar
+Javier,Ibarra,,,members_class,Ibarra
+Raul,Guerrero Flores,,,member,Guerrero
+Elena,Pacheco Serrano,,,member,Guerrero
+Adriana,Contreras,,,member,Contreras
+Francisco,Cabrera,,,inactive,Cabrera
+Manuel,Espinoza Vega,,,member,Espinoza
+Diana,Leon Carrasquillo,,,member,Espinoza
+Isabella,Espinoza Leon,,,member,Espinoza
+Alicia,Rios,,,visitor,Rios
+Pablo,Cardenas,,,member,Cardenas
+Alberto,Dominguez Correa,,,member,Dominguez
+Mariana,Fuentes Otero,,,member,Dominguez
+Lorena,Avila,,,members_class,Avila
+Sergio,Paredes,,,member,Paredes
+Ernesto,Nunez Baez,,,member,Nunez
+Gloria,Sandoval Montalvo,,,member,Nunez
+Mateo,Nunez Sandoval,,,member,Nunez
+Nicolas,Nunez Sandoval,,,member,Nunez
+Ruben,Zamora,,,inactive,Zamora
+Teresa,Lara,,,member,Lara
+Gerardo,Estrada Mejia,,,member,Estrada
+Monica,Velazquez Rios,,,member,Estrada
+Julian,Quintero,,,visitor,Quintero
