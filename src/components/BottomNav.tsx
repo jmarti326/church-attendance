@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 const navItems = [
   { href: "/attendance", label: "Asistencia", icon: "📋" },
   { href: "/members", label: "Miembros", icon: "👥" },
+  { href: "/dashboard", label: "Dashboard", icon: "📊" },
 ];
 
 export function BottomNav() {
