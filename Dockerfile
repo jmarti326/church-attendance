@@ -12,7 +12,7 @@ COPY . .
 RUN npx prisma generate
 
 # Create a blank DB with the schema applied (for copying to production)
-RUN DATABASE_URL="file:./template.db" npx prisma db push --skip-generate
+RUN DATABASE_URL="file:./template.db" npx prisma db push
 
 # Build Next.js (standalone output)
 RUN npm run build
