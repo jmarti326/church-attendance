@@ -1,0 +1,11 @@
+# Dependencies
+node_modules
+.next
+*.db
+.env
+.env.local
+.git
+.gitignore
+README.md
+AGENTS.md
+CLAUDE.md

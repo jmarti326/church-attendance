@@ -9,6 +9,7 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   turbopack: {},
   allowedDevOrigins: ["172.20.96.1"],
 };
