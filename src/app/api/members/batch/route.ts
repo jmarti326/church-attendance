@@ -188,8 +188,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (e) {
     console.error("Batch upload error:", e);
+    const message = e instanceof Error ? e.message : "Unknown error";
     return Response.json(
-      { error: "Internal server error during batch upload" },
+      { error: `Internal server error during batch upload: ${message}` },
       { status: 500 }
     );
   }
