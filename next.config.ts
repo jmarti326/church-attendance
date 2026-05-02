@@ -10,6 +10,7 @@ const withPWA = withPWAInit({
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  serverExternalPackages: ["better-sqlite3", "@prisma/adapter-better-sqlite3"],
   turbopack: {},
   allowedDevOrigins: ["172.20.96.1"],
 };
