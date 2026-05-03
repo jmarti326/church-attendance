@@ -1,4 +1,4 @@
-import { prisma } from "@/lib/prisma";
+import { getDb } from "@/lib/sqlite";
 import { NextRequest } from "next/server";
 
 interface BatchMemberRow {
@@ -113,78 +113,90 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "CSV file is empty (no data rows)" }, { status: 400 });
     }
 
-    // If mode is "replace", clear existing data
-    if (mode === "replace") {
-      await prisma.attendance.deleteMany();
-      await prisma.attendanceRecord.deleteMany();
-      await prisma.member.deleteMany();
-      await prisma.family.deleteMany();
-    }
+    const db = getDb();
+    const now = new Date().toISOString();
 
-    // Group by family
-    const familyGroups = new Map<string, BatchMemberRow[]>();
-    const noFamily: BatchMemberRow[] = [];
-
-    for (const row of rows) {
-      if (row.familyGroup) {
-        const group = familyGroups.get(row.familyGroup) || [];
-        group.push(row);
-        familyGroups.set(row.familyGroup, group);
-      } else {
-        noFamily.push(row);
-      }
-    }
-
-    let created = 0;
-    let familiesCreated = 0;
-
-    // Create members with family groups
-    for (const [familyName, members] of familyGroups) {
-      // Check if family already exists (for append mode)
-      let family = await prisma.family.findFirst({ where: { name: familyName } });
-      if (!family) {
-        family = await prisma.family.create({ data: { name: familyName } });
-        familiesCreated++;
+    // Run all DB operations in a single synchronous transaction
+    const result = db.transaction(() => {
+      // If mode is "replace", clear existing data
+      if (mode === "replace") {
+        db.prepare("DELETE FROM Attendance").run();
+        db.prepare("DELETE FROM AttendanceRecord").run();
+        db.prepare("DELETE FROM Member").run();
+        db.prepare("DELETE FROM Family").run();
       }
 
-      for (const member of members) {
-        await prisma.member.create({
-          data: {
-            firstName: member.firstName,
-            lastName: member.lastName,
-            phone: member.phone || null,
-            address: member.address || null,
-            status: member.status || "member",
-            familyId: family.id,
-          },
-        });
+      // Group by family
+      const familyGroups = new Map<string, BatchMemberRow[]>();
+      const noFamily: BatchMemberRow[] = [];
+
+      for (const row of rows) {
+        if (row.familyGroup) {
+          const group = familyGroups.get(row.familyGroup) || [];
+          group.push(row);
+          familyGroups.set(row.familyGroup, group);
+        } else {
+          noFamily.push(row);
+        }
+      }
+
+      let created = 0;
+      let familiesCreated = 0;
+
+      const findFamily = db.prepare("SELECT id FROM Family WHERE name = ?");
+      const insertFamily = db.prepare(
+        "INSERT INTO Family (name, createdAt, updatedAt) VALUES (?, ?, ?)"
+      );
+      const insertMember = db.prepare(
+        `INSERT INTO Member (firstName, lastName, phone, address, status, familyId, createdAt, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+      );
+
+      // Create members with family groups
+      for (const [familyName, members] of familyGroups) {
+        let family = findFamily.get(familyName) as { id: number } | undefined;
+        if (!family) {
+          const result = insertFamily.run(familyName, now, now);
+          family = { id: Number(result.lastInsertRowid) };
+          familiesCreated++;
+        }
+
+        for (const member of members) {
+          insertMember.run(
+            member.firstName,
+            member.lastName,
+            member.phone || null,
+            member.address || null,
+            member.status || "member",
+            family.id,
+            now,
+            now
+          );
+          created++;
+        }
+      }
+
+      // Create members without family
+      for (const member of noFamily) {
+        insertMember.run(
+          member.firstName,
+          member.lastName,
+          member.phone || null,
+          member.address || null,
+          member.status || "member",
+          null,
+          now,
+          now
+        );
         created++;
       }
-    }
 
-    // Create members without family
-    for (const member of noFamily) {
-      await prisma.member.create({
-        data: {
-          firstName: member.firstName,
-          lastName: member.lastName,
-          phone: member.phone || null,
-          address: member.address || null,
-          status: member.status || "member",
-          familyId: null,
-        },
-      });
-      created++;
-    }
+      return { membersCreated: created, familiesCreated, totalRows: rows.length };
+    })();
 
     return Response.json({
       success: true,
-      summary: {
-        membersCreated: created,
-        familiesCreated,
-        totalRows: rows.length,
-        mode,
-      },
+      summary: { ...result, mode },
     });
   } catch (e) {
     console.error("Batch upload error:", e);
