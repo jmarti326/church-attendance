@@ -4,17 +4,23 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { ThemePicker } from "./ThemePicker";
+import { useAuth } from "./AuthGuard";
 
 const navItems = [
-  { href: "/attendance", label: "Asistencia", icon: "📋" },
-  { href: "/members", label: "Miembros", icon: "👥" },
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/admin/users", label: "Usuarios", icon: "🔑" },
+  { href: "/attendance", label: "Asistencia", icon: "📋", adminOnly: false },
+  { href: "/members", label: "Miembros", icon: "👥", adminOnly: false },
+  { href: "/dashboard", label: "Dashboard", icon: "📊", adminOnly: false },
+  { href: "/admin/users", label: "Usuarios", icon: "🔑", adminOnly: true },
 ];
 
 export function BottomNav() {
   const pathname = usePathname();
   const { theme } = useTheme();
+  const { user, isAuthenticated } = useAuth();
+
+  if (!isAuthenticated) return null;
+
+  const visibleItems = navItems.filter((item) => !item.adminOnly || user?.role === "admin");
 
   return (
     <nav
@@ -22,7 +28,7 @@ export function BottomNav() {
       style={{ backgroundColor: theme.navBg, borderTop: `1px solid ${theme.navBorder}` }}
     >
       <div className="flex justify-around items-center h-16">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
             <Link
