@@ -9,6 +9,7 @@ const navItems = [
   { href: "/attendance", label: "Asistencia", icon: "📋" },
   { href: "/members", label: "Miembros", icon: "👥" },
   { href: "/dashboard", label: "Dashboard", icon: "📊" },
+  { href: "/admin/users", label: "Usuarios", icon: "🔑" },
 ];
 
 export function BottomNav() {

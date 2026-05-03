@@ -16,6 +16,9 @@ RUN npx prisma generate
 # Create a blank DB with the schema applied (for copying to production)
 RUN DATABASE_URL="file:./template.db" npx prisma db push
 
+# Seed default admin user into template
+RUN DATABASE_URL="file:./template.db" npx tsx prisma/seed-auth.ts
+
 # Enable WAL mode on template DB so all runtime connections use it
 RUN sqlite3 template.db "PRAGMA journal_mode=WAL;"
 

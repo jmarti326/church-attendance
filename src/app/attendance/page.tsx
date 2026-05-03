@@ -5,6 +5,7 @@ import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
 import { useMembers, useAttendance } from "@/lib/hooks";
 import { useTheme } from "@/components/ThemeProvider";
 import { ThemePicker } from "@/components/ThemePicker";
+import { LogoutButton } from "@/components/LogoutButton";
 
 interface Member {
   id?: number;
@@ -83,6 +84,7 @@ export default function AttendancePage() {
               {!isOnline ? "⚡" : syncStatus === "syncing" ? "↻" : "✓"}
             </button>
             <ThemePicker />
+            <LogoutButton />
           </div>
         </div>
         <input

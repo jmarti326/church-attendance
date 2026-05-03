@@ -10,6 +10,9 @@ if [ ! -f /data/church.db ]; then
 elif ! sqlite3 /data/church.db ".tables" 2>/dev/null | grep -q "Family"; then
   echo "Database exists but schema is missing. Recreating..."
   needs_init=true
+elif ! sqlite3 /data/church.db ".tables" 2>/dev/null | grep -q "User"; then
+  echo "Database missing User table. Recreating..."
+  needs_init=true
 else
   # Check if WAL mode is active — critical for concurrent access
   mode=$(sqlite3 /data/church.db "PRAGMA journal_mode;" 2>/dev/null || echo "unknown")
