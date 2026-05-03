@@ -18,7 +18,8 @@ export function BottomNav() {
   const { theme } = useTheme();
   const { user, isAuthenticated } = useAuth();
 
-  if (!isAuthenticated) return null;
+  // Hide on login page and when not authenticated
+  if (pathname.startsWith("/login") || !isAuthenticated) return null;
 
   const visibleItems = navItems.filter((item) => !item.adminOnly || user?.role === "admin");
 

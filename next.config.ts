@@ -6,7 +6,9 @@ const withPWA = withPWAInit({
   register: true,
   skipWaiting: true,
   disable: process.env.NODE_ENV === "development",
-  // Prevent caching protected HTML pages — middleware auth must run on every navigation
+  // Don't precache pages — auth middleware must run on every navigation
+  publicExcludes: ["!**/*"],
+  buildExcludes: [/./],
   runtimeCaching: [
     {
       // Auth API endpoints — never cache
@@ -14,7 +16,7 @@ const withPWA = withPWAInit({
       handler: "NetworkOnly",
     },
     {
-      // Other API routes — network first with short timeout
+      // Other API routes — network first
       urlPattern: /\/api\/.*/i,
       handler: "NetworkFirst",
       options: {
@@ -23,7 +25,7 @@ const withPWA = withPWAInit({
       },
     },
     {
-      // Static assets — cache first (safe to cache)
+      // Static JS/CSS assets — safe to cache
       urlPattern: /\/_next\/static\/.*/i,
       handler: "CacheFirst",
       options: {
@@ -32,7 +34,7 @@ const withPWA = withPWAInit({
       },
     },
     {
-      // Images
+      // Images and icons
       urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp|ico)$/i,
       handler: "CacheFirst",
       options: {
