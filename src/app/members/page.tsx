@@ -72,6 +72,13 @@ export default function MembersPage() {
             >
               📤 CSV
             </Link>
+            <a
+              href="/api/members/export"
+              download="miembros.csv"
+              className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-200"
+            >
+              📥 CSV
+            </a>
             <button
               onClick={() => setShowAdd(!showAdd)}
               className="bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-sm font-medium"
