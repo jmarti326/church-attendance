@@ -3,6 +3,8 @@
 import { useState, useMemo } from "react";
 import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
 import { useMembers, useAttendance } from "@/lib/hooks";
+import { useTheme } from "@/components/ThemeProvider";
+import { ThemePicker } from "@/components/ThemePicker";
 
 interface Member {
   id?: number;
@@ -20,6 +22,7 @@ export default function AttendancePage() {
   const { members, loading: membersLoading, syncStatus, isOnline, triggerSync } = useMembers();
   const { presentIds, loading: attendanceLoading, toggle, saveAttendance, lastSaved } = useAttendance(date);
   const [saving, setSaving] = useState(false);
+  const { theme } = useTheme();
 
   const activeMembers = useMemo(
     () => members.filter((m) => m.status !== "inactive" && m.status !== "pastor" && m.status !== "fallecido"),
@@ -59,11 +62,11 @@ export default function AttendancePage() {
   return (
     <div className="pb-24">
       {/* Header */}
-      <div className="sticky top-0 bg-white z-10 border-b px-4 py-3 shadow-sm">
+      <div className="sticky top-0 z-10 border-b px-4 py-3 shadow-sm" style={{ backgroundColor: theme.headerBg }}>
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-gray-900">Asistencia</h1>
           <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-indigo-600">
+            <span className="text-sm font-semibold" style={{ color: theme.primary }}>
               {presentIds.size} presentes
             </span>
             <button
@@ -79,6 +82,7 @@ export default function AttendancePage() {
             >
               {!isOnline ? "⚡" : syncStatus === "syncing" ? "↻" : "✓"}
             </button>
+            <ThemePicker />
           </div>
         </div>
         <input
@@ -106,7 +110,7 @@ export default function AttendancePage() {
       {/* Member list */}
       {loading ? (
         <div className="flex items-center justify-center h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2" style={{ borderColor: theme.primary }} />
         </div>
       ) : (
         <div className="px-4 py-2">
@@ -126,19 +130,19 @@ export default function AttendancePage() {
                     <button
                       key={memberId}
                       onClick={() => toggle(memberId)}
-                      className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 transition-all active:scale-[0.98] ${
-                        isPresent
-                          ? "bg-green-50 border border-green-200"
-                          : "bg-white border border-gray-100"
-                      }`}
+                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 transition-all active:scale-[0.98]"
+                      style={{
+                        backgroundColor: isPresent ? theme.presentBg : "white",
+                        border: `1px solid ${isPresent ? theme.presentBorder : "#f3f4f6"}`,
+                      }}
                     >
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                            isPresent
-                              ? "border-green-500 bg-green-500"
-                              : "border-gray-300"
-                          }`}
+                          className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                          style={{
+                            borderColor: isPresent ? theme.checkColor : "#d1d5db",
+                            backgroundColor: isPresent ? theme.checkColor : "transparent",
+                          }}
                         >
                           {isPresent && <span className="text-white text-xs">✓</span>}
                         </div>
@@ -161,7 +165,8 @@ export default function AttendancePage() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="w-full bg-indigo-600 text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 active:bg-indigo-700 transition-colors"
+          className="w-full text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 active:scale-[0.98] transition-transform"
+          style={{ background: theme.buttonGradient }}
         >
           {saving ? "Guardando..." : `Guardar Asistencia (${presentIds.size})`}
         </button>
