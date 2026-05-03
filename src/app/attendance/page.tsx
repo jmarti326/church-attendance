@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
 import { useMembers, useAttendance } from "@/lib/hooks";
 import { useTheme } from "@/components/ThemeProvider";
@@ -17,13 +17,32 @@ interface Member {
   familyId?: number;
 }
 
+interface Family {
+  id: number;
+  name: string;
+}
+
+const STATUS_OPTIONS: { value: string; label: string; emoji: string }[] = [
+  { value: "all", label: "Todos", emoji: "👥" },
+  { value: "member", label: "Miembros", emoji: "⛪" },
+  { value: "visitor", label: "Visitantes", emoji: "👋" },
+  { value: "members_class", label: "Clase", emoji: "📖" },
+];
+
 export default function AttendancePage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [familyFilter, setFamilyFilter] = useState<number | "all">("all");
+  const [families, setFamilies] = useState<Family[]>([]);
   const { members, loading: membersLoading, syncStatus, isOnline, triggerSync } = useMembers();
   const { presentIds, loading: attendanceLoading, toggle, saveAttendance, lastSaved } = useAttendance(date);
   const [saving, setSaving] = useState(false);
   const { theme } = useTheme();
+
+  useEffect(() => {
+    fetch("/api/families").then((r) => r.json()).then(setFamilies).catch(() => {});
+  }, []);
 
   const activeMembers = useMemo(
     () => members.filter((m) => m.status !== "inactive" && m.status !== "pastor" && m.status !== "fallecido"),
@@ -32,12 +51,15 @@ export default function AttendancePage() {
 
   const filtered = useMemo(() => {
     const term = search.toLowerCase();
-    return activeMembers.filter(
-      (m) =>
+    return activeMembers.filter((m) => {
+      const matchesSearch =
         m.firstName.toLowerCase().includes(term) ||
-        m.lastName.toLowerCase().includes(term)
-    );
-  }, [activeMembers, search]);
+        m.lastName.toLowerCase().includes(term);
+      const matchesStatus = statusFilter === "all" || m.status === statusFilter;
+      const matchesFamily = familyFilter === "all" || m.familyId === familyFilter;
+      return matchesSearch && matchesStatus && matchesFamily;
+    });
+  }, [activeMembers, search, statusFilter, familyFilter]);
 
   // Group by familyId
   const grouped = useMemo(() => {
@@ -58,6 +80,24 @@ export default function AttendancePage() {
     setSaving(true);
     await saveAttendance(Array.from(presentIds));
     setSaving(false);
+  };
+
+  const getFamilyName = (familyId?: number) => {
+    if (!familyId) return null;
+    return families.find((f) => f.id === familyId)?.name || null;
+  };
+
+  // Toggle all members in a family
+  const toggleFamily = (familyMembers: Member[]) => {
+    const allPresent = familyMembers.every((m) => presentIds.has(m.serverId || m.id!));
+    for (const m of familyMembers) {
+      const memberId = m.serverId || m.id!;
+      if (allPresent) {
+        if (presentIds.has(memberId)) toggle(memberId);
+      } else {
+        if (!presentIds.has(memberId)) toggle(memberId);
+      }
+    }
   };
 
   return (
@@ -98,8 +138,42 @@ export default function AttendancePage() {
           placeholder="Buscar miembro..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
         />
+
+        {/* Status filter chips */}
+        <div className="flex gap-1.5 mb-2 overflow-x-auto">
+          {STATUS_OPTIONS.map((opt) => {
+            const isActive = statusFilter === opt.value;
+            return (
+              <button
+                key={opt.value}
+                onClick={() => setStatusFilter(opt.value)}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium whitespace-nowrap transition-colors"
+                style={{
+                  backgroundColor: isActive ? theme.primaryLight : "#f3f4f6",
+                  color: isActive ? theme.primary : "#6b7280",
+                  border: `1px solid ${isActive ? theme.primaryBorder : "transparent"}`,
+                }}
+              >
+                <span>{opt.emoji}</span>
+                <span>{opt.label}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Family filter */}
+        <select
+          value={familyFilter}
+          onChange={(e) => setFamilyFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+        >
+          <option value="all">🏠 Todas las familias</option>
+          {families.map((f) => (
+            <option key={f.id} value={f.id}>🏠 {f.name}</option>
+          ))}
+        </select>
       </div>
 
       {/* Offline banner */}
@@ -118,44 +192,75 @@ export default function AttendancePage() {
         <div className="px-4 py-2">
           {grouped.map((familyMembers) => {
             const familyKey = familyMembers.map((m) => m.id).join("-");
+            const isFamily = familyMembers.length > 1;
+            const familyName = getFamilyName(familyMembers[0].familyId);
+            const allPresent = familyMembers.every((m) => presentIds.has(m.serverId || m.id!));
+
             return (
-              <div key={familyKey} className="mb-2">
-                {familyMembers.length > 1 && (
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 px-1">
-                    🏠 {familyMembers[0].lastName}
-                  </h3>
-                )}
-                {familyMembers.map((m) => {
-                  const memberId = m.serverId || m.id!;
-                  const isPresent = presentIds.has(memberId);
-                  return (
-                    <button
-                      key={memberId}
-                      onClick={() => toggle(memberId)}
-                      className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 transition-all active:scale-[0.98]"
+              <div
+                key={familyKey}
+                className="mb-3 rounded-xl overflow-hidden"
+                style={{
+                  border: isFamily ? `1px solid ${theme.primaryBorder}` : "none",
+                  backgroundColor: isFamily ? `${theme.primaryLight}40` : "transparent",
+                }}
+              >
+                {/* Family header */}
+                {isFamily && (
+                  <button
+                    onClick={() => toggleFamily(familyMembers)}
+                    className="w-full flex items-center justify-between px-3 py-2 text-left"
+                    style={{ backgroundColor: `${theme.primaryLight}80` }}
+                  >
+                    <span className="text-xs font-bold uppercase tracking-wide" style={{ color: theme.primary }}>
+                      🏠 {familyName || familyMembers[0].lastName}
+                    </span>
+                    <span
+                      className="text-[10px] px-2 py-0.5 rounded-full font-medium"
                       style={{
-                        backgroundColor: isPresent ? theme.presentBg : "white",
-                        border: `1px solid ${isPresent ? theme.presentBorder : "#f3f4f6"}`,
+                        backgroundColor: allPresent ? theme.checkColor : "#e5e7eb",
+                        color: allPresent ? "white" : "#6b7280",
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
-                          style={{
-                            borderColor: isPresent ? theme.checkColor : "#d1d5db",
-                            backgroundColor: isPresent ? theme.checkColor : "transparent",
-                          }}
-                        >
-                          {isPresent && <span className="text-white text-xs">✓</span>}
+                      {allPresent ? "✓ Todos" : `${familyMembers.filter((m) => presentIds.has(m.serverId || m.id!)).length}/${familyMembers.length}`}
+                    </span>
+                  </button>
+                )}
+
+                {/* Members */}
+                <div className={isFamily ? "px-2 pb-2 pt-1" : ""}>
+                  {familyMembers.map((m) => {
+                    const memberId = m.serverId || m.id!;
+                    const isPresent = presentIds.has(memberId);
+                    return (
+                      <button
+                        key={memberId}
+                        onClick={() => toggle(memberId)}
+                        className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg mb-1 transition-all active:scale-[0.98]"
+                        style={{
+                          backgroundColor: isPresent ? theme.presentBg : "white",
+                          border: `1px solid ${isPresent ? theme.presentBorder : "#f3f4f6"}`,
+                        }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors"
+                            style={{
+                              borderColor: isPresent ? theme.checkColor : "#d1d5db",
+                              backgroundColor: isPresent ? theme.checkColor : "transparent",
+                            }}
+                          >
+                            {isPresent && <span className="text-white text-xs">✓</span>}
+                          </div>
+                          <span className="text-sm font-medium text-gray-900">
+                            {m.firstName} {m.lastName}
+                          </span>
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
-                          {m.firstName} {m.lastName}
-                        </span>
-                      </div>
-                      <StatusBadge status={m.status} />
-                    </button>
-                  );
-                })}
+                        <StatusBadge status={m.status} />
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             );
           })}
