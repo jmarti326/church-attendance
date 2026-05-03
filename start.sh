@@ -19,5 +19,8 @@ else
   echo "Database already exists with valid schema."
 fi
 
+# Enable WAL mode for concurrent read/write access (readers won't block writers)
+sqlite3 /data/church.db "PRAGMA journal_mode=WAL;"
+
 echo "Starting application..."
 exec node server.js
