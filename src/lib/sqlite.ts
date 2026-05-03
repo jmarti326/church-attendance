@@ -10,7 +10,7 @@ export function getDb(): Database.Database {
   if (!globalForDb._sqliteDb) {
     globalForDb._sqliteDb = new Database(dbPath);
     globalForDb._sqliteDb.pragma("journal_mode = WAL");
-    globalForDb._sqliteDb.pragma("busy_timeout = 15000");
+    globalForDb._sqliteDb.pragma("busy_timeout = 30000");
     globalForDb._sqliteDb.pragma("foreign_keys = ON");
   }
   return globalForDb._sqliteDb;

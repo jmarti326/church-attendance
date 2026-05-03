@@ -3,6 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+RUN apk add --no-cache sqlite
+
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -13,6 +15,9 @@ RUN npx prisma generate
 
 # Create a blank DB with the schema applied (for copying to production)
 RUN DATABASE_URL="file:./template.db" npx prisma db push
+
+# Enable WAL mode on template DB so all runtime connections use it
+RUN sqlite3 template.db "PRAGMA journal_mode=WAL;"
 
 # Build Next.js (standalone output)
 RUN npm run build

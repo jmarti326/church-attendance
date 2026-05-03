@@ -14,10 +14,10 @@ fi
 if [ "$needs_init" = true ]; then
   echo "Creating database from template..."
   cp /app/template.db /data/church.db
-  # Enable WAL mode on fresh database (no lock contention possible)
-  sqlite3 /data/church.db "PRAGMA journal_mode=WAL;" 2>/dev/null || true
-  echo "Database created."
+  echo "Database created with WAL mode."
 else
+  # Try to enable WAL mode on existing database (non-fatal if locked)
+  sqlite3 /data/church.db "PRAGMA journal_mode=WAL;" 2>/dev/null || echo "Note: WAL mode will be set by app on first connection"
   echo "Database already exists with valid schema."
 fi
 
