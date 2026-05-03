@@ -1,24 +1,28 @@
 #!/bin/sh
 set -e
 
-# If database doesn't exist or is missing required tables, create from template
+# If database doesn't exist, is missing schema, or lacks WAL mode: recreate from template
 needs_init=false
 
 if [ ! -f /data/church.db ]; then
+  echo "No database found."
   needs_init=true
 elif ! sqlite3 /data/church.db ".tables" 2>/dev/null | grep -q "Family"; then
-  echo "Database exists but schema is missing or outdated. Re-creating from template..."
+  echo "Database exists but schema is missing. Recreating..."
   needs_init=true
+else
+  # Check if WAL mode is active — critical for concurrent access
+  mode=$(sqlite3 /data/church.db "PRAGMA journal_mode;" 2>/dev/null || echo "unknown")
+  if [ "$mode" != "wal" ]; then
+    echo "Database not in WAL mode (current: $mode). Recreating to enable WAL..."
+    needs_init=true
+  fi
 fi
 
 if [ "$needs_init" = true ]; then
-  echo "Creating database from template..."
+  rm -f /data/church.db /data/church.db-shm /data/church.db-wal
   cp /app/template.db /data/church.db
-  echo "Database created with WAL mode."
-else
-  # Try to enable WAL mode on existing database (non-fatal if locked)
-  sqlite3 /data/church.db "PRAGMA journal_mode=WAL;" 2>/dev/null || echo "Note: WAL mode will be set by app on first connection"
-  echo "Database already exists with valid schema."
+  echo "Database created from template with WAL mode."
 fi
 
 echo "Starting application..."
