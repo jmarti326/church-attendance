@@ -24,7 +24,13 @@ else
     echo "Database not in WAL mode (current: $mode). Recreating..."
     needs_init=true
   else
-    echo "Database OK (WAL mode, all tables present)."
+    user_count=$(sqlite3 /data/church.db "SELECT COUNT(*) FROM User;" 2>/dev/null || echo "0")
+    if [ "$user_count" = "0" ]; then
+      echo "No users found in database. Recreating from template with seeded admin..."
+      needs_init=true
+    else
+      echo "Database OK (WAL mode, all tables present, users exist)."
+    fi
   fi
 fi
 
