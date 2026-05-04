@@ -137,6 +137,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'NODE_ENV'
               value: 'production'
             }
+            {
+              name: 'TZ'
+              value: 'America/Puerto_Rico'
+            }
           ]
           volumeMounts: [
             {

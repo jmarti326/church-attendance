@@ -38,7 +38,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
-RUN apk add --no-cache sqlite
+RUN apk add --no-cache sqlite tzdata
 
 # Copy built assets
 COPY --from=builder /app/public ./public
@@ -69,5 +69,6 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL="file:/data/church.db"
+ENV TZ="America/Puerto_Rico"
 
 CMD ["./start.sh"]
