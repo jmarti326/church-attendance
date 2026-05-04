@@ -4,6 +4,7 @@ import "./globals.css";
 import { BottomNav } from "@/components/BottomNav";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthGuard } from "@/components/AuthGuard";
+import { VersionChecker } from "@/components/VersionChecker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-gray-50 font-[family-name:var(--font-geist-sans)]">
         <ThemeProvider>
           <AuthGuard>
+            <VersionChecker />
             <main className="flex-1">{children}</main>
             <BottomNav />
           </AuthGuard>
