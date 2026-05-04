@@ -6,7 +6,7 @@ const SECRET = new TextEncoder().encode(
   process.env.AUTH_SECRET || "church-attendance-secret-change-in-prod"
 );
 
-const PUBLIC_PATHS = ["/login", "/api/auth/login"];
+const PUBLIC_PATHS = ["/login", "/api/auth/login", "/api/version"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
