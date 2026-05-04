@@ -41,7 +41,9 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
+          SUFFIX="run-${{ github.run_number }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+            --revision-suffix "${SUFFIX}"
