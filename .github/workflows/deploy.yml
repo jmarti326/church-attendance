@@ -43,38 +43,9 @@ jobs:
         run: |
           SUFFIX="run-${{ github.run_number }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          
-          # Create a YAML template with full config including volume mounts
-          cat > /tmp/containerapp.yaml <<EOF
-          properties:
-            template:
-              revisionSuffix: ${SUFFIX}
-              containers:
-                - name: church-attendance
-                  image: ${IMAGE}
-                  resources:
-                    cpu: 0.25
-                    memory: 0.5Gi
-                  env:
-                    - name: DATABASE_URL
-                      value: "file:/data/church.db"
-                    - name: NODE_ENV
-                      value: "production"
-                    - name: TZ
-                      value: "America/Puerto_Rico"
-                  volumeMounts:
-                    - volumeName: data
-                      mountPath: /data
-              volumes:
-                - name: data
-                  storageName: churchdata
-                  storageType: AzureFile
-              scale:
-                minReplicas: 0
-                maxReplicas: 1
-          EOF
-          
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --yaml /tmp/containerapp.yaml
+            --image "${IMAGE}" \
+            --revision-suffix "${SUFFIX}" \
+            --set-env-vars "DATABASE_URL=file:/data/church.db" "NODE_ENV=production" "TZ=America/Puerto_Rico"
