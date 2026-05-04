@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { ThemePicker } from "./ThemePicker";
 import { useAuth } from "./AuthGuard";
-import { AppVersion } from "./AppVersion";
 
 const navItems = [
   { href: "/attendance", label: "Asistencia", icon: "📋", adminOnly: false },
@@ -44,9 +43,7 @@ export function BottomNav() {
             </Link>
           );
         })}
-        <div className="absolute bottom-1 right-2">
-          <AppVersion />
-        </div>
+
       </div>
     </nav>
   );
