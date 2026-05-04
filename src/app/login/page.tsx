@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { AppVersion } from "@/components/AppVersion";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -87,6 +88,9 @@ export default function LoginPage() {
             {loading ? "Entrando..." : "Iniciar Sesión"}
           </button>
         </form>
+        <div className="text-center mt-4">
+          <AppVersion />
+        </div>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "./ThemeProvider";
 import { ThemePicker } from "./ThemePicker";
 import { useAuth } from "./AuthGuard";
+import { AppVersion } from "./AppVersion";
 
 const navItems = [
   { href: "/attendance", label: "Asistencia", icon: "📋", adminOnly: false },
@@ -28,7 +29,7 @@ export function BottomNav() {
       className="fixed bottom-0 left-0 right-0 safe-area-bottom z-50"
       style={{ backgroundColor: theme.navBg, borderTop: `1px solid ${theme.navBorder}` }}
     >
-      <div className="flex justify-around items-center h-16">
+      <div className="flex justify-around items-center h-16 relative">
         {visibleItems.map((item) => {
           const isActive = pathname.startsWith(item.href);
           return (
@@ -43,6 +44,9 @@ export function BottomNav() {
             </Link>
           );
         })}
+        <div className="absolute bottom-1 right-2">
+          <AppVersion />
+        </div>
       </div>
     </nav>
   );

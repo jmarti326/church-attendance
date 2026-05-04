@@ -1,6 +1,8 @@
 # Build stage
 FROM node:20-alpine AS builder
 
+ARG APP_VERSION=dev
+
 WORKDIR /app
 
 RUN apk add --no-cache sqlite
@@ -22,7 +24,8 @@ RUN DATABASE_URL="file:./template.db" npx tsx prisma/seed-auth.ts
 # Enable WAL mode on template DB so all runtime connections use it
 RUN sqlite3 template.db "PRAGMA journal_mode=WAL;"
 
-# Build Next.js (standalone output)
+# Build Next.js (standalone output) with version baked in
+ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
 RUN npm run build
 
 # Production stage
