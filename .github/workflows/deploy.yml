@@ -42,8 +42,10 @@ jobs:
       - name: Deploy to Azure Container Apps
         run: |
           SUFFIX="run-${{ github.run_number }}"
+          IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
             --resource-group ${{ env.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-            --revision-suffix "${SUFFIX}"
+            --image "${IMAGE}" \
+            --revision-suffix "${SUFFIX}" \
+            --set-env-vars "DATABASE_URL=file:/data/church.db" "NODE_ENV=production" "TZ=America/Puerto_Rico"

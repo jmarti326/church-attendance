@@ -3,8 +3,20 @@ set -e
 
 echo "Checking database..."
 
-# Ensure /data directory exists
+# Ensure /data directory exists and is writable
 mkdir -p /data
+echo "Directory /data exists. Contents:"
+ls -la /data/ 2>/dev/null || echo "(empty or inaccessible)"
+
+# Test write access
+if ! touch /data/.write_test 2>/dev/null; then
+  echo "ERROR: /data is not writable! Checking mount info..."
+  df -h /data 2>/dev/null || true
+  mount | grep data 2>/dev/null || true
+  echo "Attempting to fix permissions..."
+  chmod 777 /data 2>/dev/null || true
+fi
+rm -f /data/.write_test
 
 # If database doesn't exist or is missing core tables: create from template
 needs_init=false

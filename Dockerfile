@@ -36,8 +36,6 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
 RUN apk add --no-cache sqlite tzdata
 
 # Copy built assets
@@ -60,9 +58,7 @@ COPY start.sh ./start.sh
 RUN chmod +x ./start.sh
 
 # Create data directory for SQLite (mounted as persistent volume)
-RUN mkdir -p /data && chown nextjs:nodejs /data
-
-USER nextjs
+RUN mkdir -p /data
 
 EXPOSE 3000
 
