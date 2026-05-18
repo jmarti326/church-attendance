@@ -1,4 +1,4 @@
-import { getDb } from "@/lib/sqlite";
+import { prisma } from "@/lib/prisma";
 import { NextRequest } from "next/server";
 
 interface BatchMemberRow {
@@ -113,17 +113,13 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "CSV file is empty (no data rows)" }, { status: 400 });
     }
 
-    const db = getDb();
-    const now = new Date().toISOString();
-
-    // Run all DB operations in a single synchronous transaction
-    const result = db.transaction(() => {
+    const result = await prisma.$transaction(async (tx) => {
       // If mode is "replace", clear existing data
       if (mode === "replace") {
-        db.prepare("DELETE FROM Attendance").run();
-        db.prepare("DELETE FROM AttendanceRecord").run();
-        db.prepare("DELETE FROM Member").run();
-        db.prepare("DELETE FROM Family").run();
+        await tx.attendance.deleteMany();
+        await tx.attendanceRecord.deleteMany();
+        await tx.member.deleteMany();
+        await tx.family.deleteMany();
       }
 
       // Group by family
@@ -143,56 +139,46 @@ export async function POST(request: NextRequest) {
       let created = 0;
       let familiesCreated = 0;
 
-      const findFamily = db.prepare("SELECT id FROM Family WHERE name = ?");
-      const insertFamily = db.prepare(
-        "INSERT INTO Family (name, createdAt, updatedAt) VALUES (?, ?, ?)"
-      );
-      const insertMember = db.prepare(
-        `INSERT INTO Member (firstName, lastName, phone, address, status, familyId, createdAt, updatedAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-      );
-
       // Create members with family groups
       for (const [familyName, members] of familyGroups) {
-        let family = findFamily.get(familyName) as { id: number } | undefined;
+        let family = await tx.family.findFirst({ where: { name: familyName } });
         if (!family) {
-          const result = insertFamily.run(familyName, now, now);
-          family = { id: Number(result.lastInsertRowid) };
+          family = await tx.family.create({ data: { name: familyName } });
           familiesCreated++;
         }
 
         for (const member of members) {
-          insertMember.run(
-            member.firstName,
-            member.lastName,
-            member.phone || null,
-            member.address || null,
-            member.status || "member",
-            family.id,
-            now,
-            now
-          );
+          await tx.member.create({
+            data: {
+              firstName: member.firstName,
+              lastName: member.lastName,
+              phone: member.phone || null,
+              address: member.address || null,
+              status: member.status || "member",
+              familyId: family.id,
+            },
+          });
           created++;
         }
       }
 
       // Create members without family
       for (const member of noFamily) {
-        insertMember.run(
-          member.firstName,
-          member.lastName,
-          member.phone || null,
-          member.address || null,
-          member.status || "member",
-          null,
-          now,
-          now
-        );
+        await tx.member.create({
+          data: {
+            firstName: member.firstName,
+            lastName: member.lastName,
+            phone: member.phone || null,
+            address: member.address || null,
+            status: member.status || "member",
+            familyId: null,
+          },
+        });
         created++;
       }
 
       return { membersCreated: created, familiesCreated, totalRows: rows.length };
-    })();
+    });
 
     return Response.json({
       success: true,

@@ -1,9 +1,10 @@
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import { PrismaPg } from "@prisma/adapter-pg";
 import bcrypt from "bcryptjs";
 
 async function seed() {
-  const adapter = new PrismaBetterSqlite3({ url: "file:./template.db" });
+  const connectionString = process.env.DATABASE_URL || "postgresql://postgres:postgres@localhost:5432/church";
+  const adapter = new PrismaPg({ connectionString });
   const prisma = new PrismaClient({ adapter });
 
   // Create default admin user
@@ -21,6 +22,7 @@ async function seed() {
   });
 
   console.log("✅ Seeded default admin user (admin / admin123)");
+  await prisma.$disconnect();
   process.exit(0);
 }
 

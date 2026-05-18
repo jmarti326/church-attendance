@@ -18,6 +18,10 @@ param containerAppName string = 'ca-church-attendance'
 @description('Container image tag')
 param imageTag string = 'latest'
 
+@description('PostgreSQL password')
+@secure()
+param pgPassword string
+
 // Resource Group
 resource rg 'Microsoft.Resources/resourceGroups@2023-07-01' = {
   name: resourceGroupName
@@ -34,6 +38,7 @@ module resources 'resources.bicep' = {
     environmentName: environmentName
     containerAppName: containerAppName
     imageTag: imageTag
+    pgPassword: pgPassword
   }
 }
 
