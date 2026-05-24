@@ -33,6 +33,7 @@ jobs:
           scope: subscription
           region: ${{ inputs.location }}
           template: infra/main.bicep
+          failOnStdErr: false
           parameters: >
             resourceGroupName=rg-church-attendance
             location=${{ inputs.location }}
