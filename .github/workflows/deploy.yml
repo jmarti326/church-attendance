@@ -48,4 +48,4 @@ jobs:
             --resource-group ${{ env.RESOURCE_GROUP }} \
             --image "${IMAGE}" \
             --revision-suffix "${SUFFIX}" \
-            --set-env-vars "DATABASE_URL=file:/data/church.db" "NODE_ENV=production" "TZ=America/Puerto_Rico"
+            --set-env-vars "NODE_ENV=production" "TZ=America/Puerto_Rico"
