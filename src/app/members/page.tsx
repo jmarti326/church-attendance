@@ -48,12 +48,12 @@ export default function MembersPage() {
   }, [filtered]);
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 max-w-5xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white z-10 border-b px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-lg font-bold text-gray-900">Miembros</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
             <button
               onClick={triggerSync}
               className={`px-2 py-1 rounded text-xs font-medium ${
@@ -149,6 +149,7 @@ export default function MembersPage() {
         </div>
       ) : (
         <div className="px-4">
+          <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3">
           {grouped.map(([key, familyMembers]) => (
             <div key={key} className="mb-3">
               {familyMembers.length > 1 && (
@@ -176,6 +177,7 @@ export default function MembersPage() {
               ))}
             </div>
           ))}
+          </div>
         </div>
       )}
     </div>

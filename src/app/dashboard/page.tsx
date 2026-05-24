@@ -72,7 +72,7 @@ export default function DashboardPage() {
   }, [fetchData]);
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 max-w-5xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 bg-white z-10 border-b px-4 py-3 shadow-sm">
         <h1 className="text-lg font-bold text-gray-900 mb-2">Dashboard</h1>

@@ -41,8 +41,8 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthGuard>
             <VersionChecker />
-            <main className="flex-1">{children}</main>
             <BottomNav />
+            <main className="flex-1 lg:ml-56">{children}</main>
           </AuthGuard>
         </ThemeProvider>
       </body>

@@ -101,7 +101,7 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="pb-24">
+    <div className="pb-24 max-w-5xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 border-b px-4 py-3 shadow-sm" style={{ backgroundColor: theme.headerBg }}>
         <div className="flex items-center justify-between mb-2">
@@ -127,22 +127,24 @@ export default function AttendancePage() {
             <LogoutButton />
           </div>
         </div>
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
-        />
-        <input
-          type="text"
-          placeholder="Buscar miembro..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2"
-        />
+        <div className="lg:flex lg:gap-3 lg:items-center">
+          <input
+            type="date"
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
+            className="w-full lg:w-auto border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 lg:mb-0"
+          />
+          <input
+            type="text"
+            placeholder="Buscar miembro..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full lg:flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm mb-2 lg:mb-0"
+          />
+        </div>
 
         {/* Status filter chips */}
-        <div className="flex gap-1.5 mb-2 overflow-x-auto">
+        <div className="flex gap-1.5 mb-2 overflow-x-auto mt-2">
           {STATUS_OPTIONS.map((opt) => {
             const isActive = statusFilter === opt.value;
             return (
@@ -167,7 +169,7 @@ export default function AttendancePage() {
         <select
           value={familyFilter}
           onChange={(e) => setFamilyFilter(e.target.value === "all" ? "all" : Number(e.target.value))}
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          className="w-full lg:w-64 border border-gray-300 rounded-lg px-3 py-2 text-sm"
         >
           <option value="all">🏠 Todas las familias</option>
           {families.map((f) => (
@@ -190,6 +192,7 @@ export default function AttendancePage() {
         </div>
       ) : (
         <div className="px-4 py-2">
+          <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3">
           {grouped.map((familyMembers) => {
             const familyKey = familyMembers.map((m) => m.id).join("-");
             const isFamily = familyMembers.length > 1;
@@ -264,24 +267,27 @@ export default function AttendancePage() {
               </div>
             );
           })}
+          </div>
         </div>
       )}
 
       {/* Save button */}
-      <div className="fixed bottom-16 left-0 right-0 p-4 bg-gradient-to-t from-white via-white">
-        <button
-          onClick={handleSave}
-          disabled={saving}
-          className="w-full text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 active:scale-[0.98] transition-transform"
-          style={{ background: theme.buttonGradient }}
-        >
-          {saving ? "Guardando..." : `Guardar Asistencia (${presentIds.size})`}
-        </button>
-        {lastSaved && (
-          <p className="text-center text-xs mt-1 text-gray-500">
-            {lastSaved === "synced" ? "✓ Guardado en servidor" : "💾 Guardado localmente"}
-          </p>
-        )}
+      <div className="fixed bottom-16 lg:bottom-0 left-0 lg:left-56 right-0 p-4 bg-gradient-to-t from-white via-white">
+        <div className="max-w-5xl mx-auto">
+          <button
+            onClick={handleSave}
+            disabled={saving}
+            className="w-full text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 active:scale-[0.98] transition-transform"
+            style={{ background: theme.buttonGradient }}
+          >
+            {saving ? "Guardando..." : `Guardar Asistencia (${presentIds.size})`}
+          </button>
+          {lastSaved && (
+            <p className="text-center text-xs mt-1 text-gray-500">
+              {lastSaved === "synced" ? "✓ Guardado en servidor" : "💾 Guardado localmente"}
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
