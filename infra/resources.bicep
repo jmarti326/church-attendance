@@ -14,8 +14,8 @@ param containerAppName string
 param imageTag string
 
 @secure()
-@description('PostgreSQL password')
-param pgPassword string
+@description('Database connection URL (Neon PostgreSQL)')
+param databaseUrl string
 
 // ─── Log Analytics Workspace ──────────────────────────────────────
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2022-10-01' = {
@@ -56,11 +56,11 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-// ─── NOTE: PostgreSQL runs as a sidecar container in the main app ─
-// Data is ephemeral (stored in /tmp/pgdata). For persistence, migrate
-// to a managed PostgreSQL service (Azure Flexible Server, Neon, etc.)
+// ─── NOTE: Production uses Neon managed PostgreSQL ────────────────
+// Local development uses docker-compose.yml with a local postgres container.
+// The DATABASE_URL is passed as a secret — never committed to code.
 
-// ─── Container App (with PostgreSQL sidecar) ─────────────────────
+// ─── Container App ───────────────────────────────────────────────
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
@@ -87,11 +87,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           name: 'database-url'
-          value: 'postgresql://postgres:${pgPassword}@localhost:5432/church'
-        }
-        {
-          name: 'pg-password'
-          value: pgPassword
+          value: databaseUrl
         }
       ]
     }
@@ -101,8 +97,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           name: 'church-attendance'
           image: '${acr.properties.loginServer}/church-attendance:${imageTag}'
           resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
+            cpu: json('0.5')
+            memory: '1Gi'
           }
           env: [
             {
@@ -116,32 +112,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'TZ'
               value: 'America/Puerto_Rico'
-            }
-          ]
-        }
-        {
-          name: 'postgres'
-          image: 'docker.io/library/postgres:16-alpine'
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
-          env: [
-            {
-              name: 'POSTGRES_DB'
-              value: 'church'
-            }
-            {
-              name: 'POSTGRES_USER'
-              value: 'postgres'
-            }
-            {
-              name: 'POSTGRES_PASSWORD'
-              secretRef: 'pg-password'
-            }
-            {
-              name: 'PGDATA'
-              value: '/tmp/pgdata'
             }
           ]
         }

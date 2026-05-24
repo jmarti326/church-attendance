@@ -41,4 +41,4 @@ jobs:
             environmentName=cae-church-attendance
             containerAppName=ca-church-attendance
             imageTag=latest
-            pgPassword=${{ secrets.PG_PASSWORD }}
+            databaseUrl=${{ secrets.DATABASE_URL }}
