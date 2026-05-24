@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
 import { useMembers } from "@/lib/hooks";
 import { SyncService } from "@/lib/sync";
+import { useAuth } from "@/components/AuthGuard";
 
 interface Family {
   id: number;
@@ -14,6 +15,8 @@ interface Family {
 
 export default function MembersPage() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
   const { members, loading, syncStatus, isOnline, triggerSync, reload } = useMembers();
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -69,8 +72,9 @@ export default function MembersPage() {
             <Link
               href="/batch-upload"
               className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-200"
+              style={{ display: isAdmin ? "inline-block" : "none" }}
             >
-              📤 CSV
+              📤 Importar
             </Link>
             <a
               href="/api/members/export"
@@ -82,8 +86,9 @@ export default function MembersPage() {
             <Link
               href="/admin/families"
               className="bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-200"
+              style={{ display: isAdmin ? "inline-block" : "none" }}
             >
-              🏠
+              🏠 Familias
             </Link>
             <button
               onClick={() => setShowAdd(!showAdd)}
