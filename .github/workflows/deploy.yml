@@ -42,7 +42,7 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
-          SUFFIX="run-${{ github.run_number }}"
+          SUFFIX="deploy-${{ github.run_number }}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
