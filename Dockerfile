@@ -15,7 +15,7 @@ RUN npx prisma generate
 
 # Build Next.js (standalone output) with version baked in
 ENV NEXT_PUBLIC_APP_VERSION=$APP_VERSION
-RUN echo "Building with NEXT_PUBLIC_APP_VERSION=$NEXT_PUBLIC_APP_VERSION" && npm run build
+RUN npm run build
 
 # Prune to production deps only (keeps resolved nested deps intact)
 RUN npm prune --omit=dev && npm install tsx

@@ -56,121 +56,14 @@ resource environment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
-// ─── Azure File Share for PostgreSQL data persistence ─────────────
-resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
-  name: 'stchurchattendance'
-  location: location
-  sku: {
-    name: 'Standard_LRS'
-  }
-  kind: 'StorageV2'
-  properties: {
-    minimumTlsVersion: 'TLS1_2'
-  }
-}
+// ─── NOTE: PostgreSQL runs as a sidecar container in the main app ─
+// Data is ephemeral (stored in /tmp/pgdata). For persistence, migrate
+// to a managed PostgreSQL service (Azure Flexible Server, Neon, etc.)
 
-resource fileService 'Microsoft.Storage/storageAccounts/fileServices@2023-01-01' = {
-  parent: storageAccount
-  name: 'default'
-}
-
-resource fileShare 'Microsoft.Storage/storageAccounts/fileServices/shares@2023-01-01' = {
-  parent: fileService
-  name: 'pgdata'
-  properties: {
-    shareQuota: 1
-  }
-}
-
-// ─── Storage mount on Container Apps Environment ──────────────────
-resource envStorage 'Microsoft.App/managedEnvironments/storages@2024-03-01' = {
-  parent: environment
-  name: 'pgdata'
-  properties: {
-    azureFile: {
-      accountName: storageAccount.name
-      accountKey: storageAccount.listKeys().keys[0].value
-      shareName: fileShare.name
-      accessMode: 'ReadWrite'
-    }
-  }
-}
-
-// ─── PostgreSQL Container App ─────────────────────────────────────
-resource postgresApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'ca-postgres'
-  location: location
-  properties: {
-    managedEnvironmentId: environment.id
-    configuration: {
-      ingress: {
-        external: false
-        targetPort: 5432
-        exposedPort: 5432
-        transport: 'tcp'
-      }
-      secrets: [
-        {
-          name: 'pg-password'
-          value: pgPassword
-        }
-      ]
-    }
-    template: {
-      containers: [
-        {
-          name: 'postgres'
-          image: 'postgres:16-alpine'
-          resources: {
-            cpu: json('0.25')
-            memory: '0.5Gi'
-          }
-          env: [
-            {
-              name: 'POSTGRES_DB'
-              value: 'church'
-            }
-            {
-              name: 'POSTGRES_USER'
-              value: 'postgres'
-            }
-            {
-              name: 'POSTGRES_PASSWORD'
-              secretRef: 'pg-password'
-            }
-            {
-              name: 'PGDATA'
-              value: '/var/lib/postgresql/data/pgdata'
-            }
-          ]
-          volumeMounts: [
-            {
-              volumeName: 'pgdata'
-              mountPath: '/var/lib/postgresql/data'
-            }
-          ]
-        }
-      ]
-      volumes: [
-        {
-          name: 'pgdata'
-          storageName: envStorage.name
-          storageType: 'AzureFile'
-        }
-      ]
-      scale: {
-        minReplicas: 1
-        maxReplicas: 1
-      }
-    }
-  }
-}
-
-// ─── Container App ────────────────────────────────────────────────
+// ─── Container App (with PostgreSQL sidecar) ─────────────────────
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
-  dependsOn: [postgresApp]
   properties: {
     managedEnvironmentId: environment.id
     configuration: {
@@ -194,7 +87,11 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           name: 'database-url'
-          value: 'postgresql://postgres:${pgPassword}@ca-postgres.internal.${environment.properties.defaultDomain}:5432/church'
+          value: 'postgresql://postgres:${pgPassword}@localhost:5432/church'
+        }
+        {
+          name: 'pg-password'
+          value: pgPassword
         }
       ]
     }
@@ -222,9 +119,35 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
           ]
         }
+        {
+          name: 'postgres'
+          image: 'docker.io/library/postgres:16-alpine'
+          resources: {
+            cpu: json('0.25')
+            memory: '0.5Gi'
+          }
+          env: [
+            {
+              name: 'POSTGRES_DB'
+              value: 'church'
+            }
+            {
+              name: 'POSTGRES_USER'
+              value: 'postgres'
+            }
+            {
+              name: 'POSTGRES_PASSWORD'
+              secretRef: 'pg-password'
+            }
+            {
+              name: 'PGDATA'
+              value: '/tmp/pgdata'
+            }
+          ]
+        }
       ]
       scale: {
-        minReplicas: 0
+        minReplicas: 1
         maxReplicas: 1
       }
     }
