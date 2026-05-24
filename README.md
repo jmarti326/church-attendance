@@ -28,7 +28,6 @@ A mobile-friendly Progressive Web App for tracking church attendance every Sunda
 | Environment | URL |
 |-------------|-----|
 | **Production (Vercel)** | https://church-attendance-indol.vercel.app |
-| **Production (Azure)** | https://ca-church-attendance.salmonmushroom-89d128aa.eastus.azurecontainerapps.io |
 
 ## Getting Started
 
@@ -36,7 +35,7 @@ A mobile-friendly Progressive Web App for tracking church attendance every Sunda
 
 - Node.js 20+
 - npm
-- Docker (for local PostgreSQL)
+- PostgreSQL (local install or Docker)
 
 ### Local Development Setup
 
@@ -46,8 +45,8 @@ git clone https://github.com/jmarti326/church-attendance.git
 cd church-attendance
 npm install
 
-# 2. Start local PostgreSQL
-docker compose up -d
+# 2. Start local PostgreSQL (use Docker or local install)
+# docker run -d --name church-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16
 
 # 3. Set up environment
 cp .env.example .env
@@ -76,8 +75,6 @@ Open [http://localhost:3000](http://localhost:3000) — login with `admin` / `ad
 | `npm run db:seed` | Seed sample members |
 | `npm run db:migrate` | Run migrations (dev mode) |
 | `npm run db:reset` | Reset database |
-| `docker compose up -d` | Start local PostgreSQL |
-| `docker compose down` | Stop local PostgreSQL |
 
 ## Project Structure
 
@@ -100,11 +97,8 @@ prisma/
   schema.prisma      # Database schema (PostgreSQL)
   seed-auth.ts       # Admin user seeder
   migrations/        # Database migration history
-infra/               # Azure Bicep templates (Container Apps)
 .github/workflows/
   deploy-vercel.yml  # CI/CD: GitHub → Vercel
-  deploy.yml         # CI/CD: GitHub → Azure Container Apps
-  infra.yml          # Azure infrastructure deployment
 ```
 
 ## Architecture
@@ -116,7 +110,7 @@ infra/               # Azure Bicep templates (Container Apps)
 └─────────────┘     └──────────────┘     └─────────────────┘
 ```
 
-- **Local dev**: Next.js → Docker PostgreSQL (localhost:5432)
+- **Local dev**: Next.js → local PostgreSQL (localhost:5432)
 - **Production**: Vercel → Neon PostgreSQL (cloud, persistent)
 
 ## Environment Variables
@@ -134,8 +128,6 @@ infra/               # Azure Bicep templates (Container Apps)
 
 ## Deployment
 
-### Vercel (Primary — Free)
-
 Deploys automatically via GitHub Actions on push to `master`.
 
 **GitHub Secrets required:**
@@ -146,15 +138,6 @@ Deploys automatically via GitHub Actions on push to `master`.
 | `VERCEL_PROJECT_ID` | Vercel project ID |
 | `DATABASE_URL` | Neon PostgreSQL connection string |
 | `AUTH_SECRET` | JWT signing secret |
-
-### Azure Container Apps (Legacy)
-
-Still configured but can be decommissioned. Uses Docker container with `Dockerfile`.
-
-**Additional secrets for Azure:**
-| Secret | Purpose |
-|--------|---------|
-| `AZURE_CREDENTIALS` | Azure service principal |
 
 ## Database
 
