@@ -33,6 +33,7 @@ jobs:
           SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
           BUILD_VERSION="${{ github.run_number }}-${SHORT_SHA}"
           docker build \
+            --no-cache \
             --build-arg APP_VERSION="${BUILD_VERSION}" \
             -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }} \
             -t ${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:latest .

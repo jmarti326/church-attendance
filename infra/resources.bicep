@@ -106,6 +106,7 @@ resource postgresApp 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: false
         targetPort: 5432
+        exposedPort: 5432
         transport: 'tcp'
       }
       secrets: [
@@ -193,7 +194,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
         {
           name: 'database-url'
-          value: 'postgresql://postgres:${pgPassword}@ca-postgres:5432/church'
+          value: 'postgresql://postgres:${pgPassword}@ca-postgres.internal.${environment.properties.defaultDomain}:5432/church'
         }
       ]
     }
