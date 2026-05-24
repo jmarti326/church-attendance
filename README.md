@@ -45,8 +45,8 @@ git clone https://github.com/jmarti326/church-attendance.git
 cd church-attendance
 npm install
 
-# 2. Start local PostgreSQL (use Docker or local install)
-# docker run -d --name church-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16
+# 2. Start local PostgreSQL
+docker compose up -d
 
 # 3. Set up environment
 cp .env.example .env
