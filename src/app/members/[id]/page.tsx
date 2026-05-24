@@ -88,10 +88,12 @@ export default function MemberDetailPage() {
       if (res.ok) {
         const newFamily = await res.json();
         familyId = newFamily.id;
+        setFamilies((prev) => [...prev, newFamily]);
+        setForm((prev) => ({ ...prev, familyId: newFamily.id.toString(), newFamilyName: "" }));
       }
     }
 
-    await fetch(`/api/members/${id}`, {
+    const saveRes = await fetch(`/api/members/${id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -103,6 +105,14 @@ export default function MemberDetailPage() {
         familyId,
       }),
     });
+
+    if (saveRes.ok) {
+      // Force sync to update local IndexedDB cache before navigating
+      try {
+        const { SyncService } = await import("@/lib/sync");
+        await SyncService.pullMembers();
+      } catch {}
+    }
 
     setSaving(false);
     router.push("/members");
