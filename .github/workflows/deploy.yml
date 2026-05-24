@@ -42,7 +42,8 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
-          SUFFIX="deploy-${{ github.run_number }}"
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          SUFFIX="cd-${SHORT_SHA}"
           IMAGE="${{ env.ACR_NAME }}.azurecr.io/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           az containerapp update \
             --name ${{ env.CONTAINER_APP_NAME }} \
