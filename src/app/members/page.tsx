@@ -156,7 +156,7 @@ export default function MembersPage() {
         <div className="px-4">
           <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3">
           {grouped.map(([key, familyMembers]) => {
-            const isFamily = familyMembers.length > 1;
+            const isFamily = key.startsWith("family-");
             const familyName = familyMembers[0].lastName.split(" ")[0].toUpperCase();
 
             return (
@@ -166,7 +166,7 @@ export default function MembersPage() {
                   <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
                     🏠 {familyName}
                   </h3>
-                  <span className="text-xs text-indigo-400 font-medium">{familyMembers.length} miembros</span>
+                  <span className="text-xs text-indigo-400 font-medium">{familyMembers.length} {familyMembers.length === 1 ? "miembro" : "miembros"}</span>
                 </div>
               )}
               {familyMembers.map((m) => {
