@@ -155,12 +155,19 @@ export default function MembersPage() {
       ) : (
         <div className="px-4">
           <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3">
-          {grouped.map(([key, familyMembers]) => (
-            <div key={key} className="mb-3">
-              {familyMembers.length > 1 && (
-                <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1 px-1">
-                  🏠 {familyMembers[0].lastName.split(" ")[0]}
-                </h3>
+          {grouped.map(([key, familyMembers]) => {
+            const isFamily = familyMembers.length > 1;
+            const familyName = familyMembers[0].lastName.split(" ")[0].toUpperCase();
+
+            return (
+            <div key={key} className={`mb-3 ${isFamily ? "rounded-xl border-2 border-indigo-200 bg-indigo-50/30 p-2" : ""}`}>
+              {isFamily && (
+                <div className="flex items-center justify-between px-2 py-1 mb-1">
+                  <h3 className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
+                    🏠 {familyName}
+                  </h3>
+                  <span className="text-xs text-indigo-400 font-medium">{familyMembers.length} miembros</span>
+                </div>
               )}
               {familyMembers.map((m) => {
                 const memberId = m.serverId || m.id;
@@ -201,7 +208,8 @@ export default function MembersPage() {
                 );
               })}
             </div>
-          ))}
+          );
+          })}
           </div>
         </div>
       )}
