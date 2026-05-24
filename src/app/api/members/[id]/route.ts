@@ -32,6 +32,8 @@ export async function PUT(
       lastName: body.lastName,
       phone: body.phone || null,
       address: body.address || null,
+      birthday: body.birthday ? new Date(body.birthday) : null,
+      photoUrl: body.photoUrl || null,
       status: body.status,
       familyId: body.familyId || null,
     },

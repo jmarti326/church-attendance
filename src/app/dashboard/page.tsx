@@ -1,5 +1,7 @@
 "use client";
 
+import VisitorFollowUp from "@/components/VisitorFollowUp";
+import { UpcomingBirthdays } from "@/components/UpcomingBirthdays";
 import { useState, useEffect, useCallback } from "react";
 
 type View = "sunday" | "month" | "year";
@@ -57,7 +59,6 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   const fetchData = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch(`/api/dashboard?view=${view}&date=${date}`);
       if (res.ok) setData(await res.json());
@@ -68,7 +69,11 @@ export default function DashboardPage() {
   }, [view, date]);
 
   useEffect(() => {
-    fetchData();
+    const timeoutId = window.setTimeout(() => {
+      void fetchData();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, [fetchData]);
 
   return (
@@ -86,7 +91,10 @@ export default function DashboardPage() {
           ] as const).map((t) => (
             <button
               key={t.value}
-              onClick={() => setView(t.value)}
+              onClick={() => {
+                setLoading(true);
+                setView(t.value);
+              }}
               className={`flex-1 py-2 rounded-lg text-sm font-medium ${
                 view === t.value
                   ? "bg-indigo-600 text-white"
@@ -103,7 +111,10 @@ export default function DashboardPage() {
           <input
             type="date"
             value={date}
-            onChange={(e) => setDate(e.target.value)}
+            onChange={(e) => {
+              setLoading(true);
+              setDate(e.target.value);
+            }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
         )}
@@ -111,14 +122,20 @@ export default function DashboardPage() {
           <input
             type="month"
             value={date.substring(0, 7)}
-            onChange={(e) => setDate(e.target.value + "-01")}
+            onChange={(e) => {
+              setLoading(true);
+              setDate(e.target.value + "-01");
+            }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
           />
         )}
         {view === "year" && (
           <select
             value={date.substring(0, 4)}
-            onChange={(e) => setDate(e.target.value + "-01-01")}
+            onChange={(e) => {
+              setLoading(true);
+              setDate(e.target.value + "-01-01");
+            }}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
           >
             {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map((y) => (
@@ -133,13 +150,40 @@ export default function DashboardPage() {
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600" />
         </div>
-      ) : data?.view === "sunday" ? (
-        <SundayView data={data} />
-      ) : data?.view === "month" ? (
-        <MonthView data={data} />
-      ) : data?.view === "year" ? (
-        <YearView data={data} />
-      ) : null}
+      ) : (
+        <>
+          {data?.view === "sunday" ? (
+            <SundayView data={data} />
+          ) : data?.view === "month" ? (
+            <MonthView data={data} />
+          ) : data?.view === "year" ? (
+            <YearView data={data} />
+          ) : null}
+          <VisitorFollowUp />
+          <UpcomingBirthdays />
+          <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: "var(--theme-card-bg)" }}>
+            <h3 className="font-semibold mb-3" style={{ color: "var(--theme-text)" }}>📥 Exportar Datos</h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => window.location.assign("/api/members/export")}
+                className="flex-1 text-center text-sm py-2 rounded-lg font-medium"
+                style={{ backgroundColor: "var(--theme-primary-light)", color: "var(--theme-primary)" }}
+              >
+                Miembros CSV
+              </button>
+              <button
+                type="button"
+                onClick={() => window.location.assign("/api/attendance/export")}
+                className="flex-1 text-center text-sm py-2 rounded-lg font-medium"
+                style={{ backgroundColor: "var(--theme-primary-light)", color: "var(--theme-primary)" }}
+              >
+                Asistencia CSV
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

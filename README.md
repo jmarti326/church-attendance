@@ -190,18 +190,34 @@ npx prisma migrate deploy
 2. Tap "Add to Home Screen" (or install prompt)
 3. The app works as a native-like app
 
+## Custom Domain Setup
+
+To use a branded URL (e.g., `asistencia.iglesia.org`):
+
+1. Go to [Vercel Dashboard](https://vercel.com) → your project → Settings → Domains
+2. Add your domain (e.g., `asistencia.iglesia.org`)
+3. Configure DNS at your registrar:
+   - **CNAME**: Point `asistencia` to `cname.vercel-dns.com`
+   - OR **A record**: Point apex domain to `76.76.21.21`
+4. Vercel automatically provisions an SSL certificate
+5. The app will be available at your custom domain within minutes
+
+## Implemented Features
+
+- [x] **Offline sync** — Queue attendance changes when offline, sync when back online
+- [x] **Reports/Export** — Export attendance + members to CSV
+- [x] **Member photos** — Profile pictures with avatar fallback
+- [x] **Attendance history** — Per-member attendance timeline with stats
+- [x] **Dark mode** — "Oscuro" theme in theme selector
+- [x] **Visitor follow-up** — Dashboard widget tracking visitor return rates
+- [x] **Birthday reminders** — Birthday field + upcoming birthdays widget
+- [x] **Sync indicator** — Visual banner when offline or changes pending
+
 ## Future Improvements
 
-- [ ] **Offline sync** — Queue attendance changes when offline, sync when back online
-- [ ] **Reports/Export** — Export attendance data to CSV/PDF
-- [ ] **Notifications** — Remind admins to take attendance on Sundays
-- [ ] **Member photos** — Profile pictures for easier identification
-- [ ] **Attendance history view** — Per-member attendance history timeline
-- [ ] **Custom domains** — Set up a branded URL (e.g., asistencia.iglesia.org)
-- [ ] **Dark mode** — Theme toggle for low-light environments
+- [ ] **Notifications** — Web Push reminders for Sunday attendance
 - [ ] **Multi-church support** — Tenant isolation for multiple congregations
-- [ ] **Visitor follow-up** — Track visitor return rates and follow-up tasks
-- [ ] **Birthday/Anniversary reminders** — Add date fields and notifications
+- [ ] **Attendance reports** — PDF generation with charts and trends
 
 ## License
 

@@ -157,24 +157,44 @@ export default function MembersPage() {
                   🏠 {familyMembers[0].lastName.split(" ")[0]}
                 </h3>
               )}
-              {familyMembers.map((m) => (
-                <button
-                  key={m.id || m.serverId}
-                  onClick={() => router.push(`/members/${m.serverId || m.id}`)}
-                  className="w-full flex items-center justify-between px-3 py-2.5 bg-white rounded-lg border border-gray-100 mb-1 active:bg-gray-50 transition-colors text-left"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {m.firstName} {m.lastName}
-                    </p>
-                    {m.phone && <p className="text-xs text-gray-500">{m.phone}</p>}
+              {familyMembers.map((m) => {
+                const memberId = m.serverId || m.id;
+
+                return (
+                  <div
+                    key={m.id || m.serverId}
+                    className="w-full flex items-center justify-between px-3 py-2.5 bg-white rounded-lg border border-gray-100 mb-1 transition-colors"
+                  >
+                    <button
+                      onClick={() => router.push(`/members/${memberId}`)}
+                      className="min-w-0 flex-1 text-left active:bg-gray-50"
+                    >
+                      <p className="text-sm font-medium text-gray-900">
+                        {m.firstName} {m.lastName}
+                      </p>
+                      {m.phone && <p className="text-xs text-gray-500">{m.phone}</p>}
+                    </button>
+                    <div className="ml-3 flex items-center gap-2">
+                      <Link
+                        href={`/members/${memberId}/history`}
+                        className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-sm text-gray-600 hover:bg-gray-200"
+                        title="Ver historial de asistencia"
+                        aria-label={`Ver historial de ${m.firstName} ${m.lastName}`}
+                      >
+                        📊
+                      </Link>
+                      <StatusBadge status={m.status} />
+                      <button
+                        onClick={() => router.push(`/members/${memberId}`)}
+                        className="px-1 text-sm text-gray-300"
+                        aria-label={`Editar a ${m.firstName} ${m.lastName}`}
+                      >
+                        ›
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <StatusBadge status={m.status} />
-                    <span className="text-gray-300 text-sm">›</span>
-                  </div>
-                </button>
-              ))}
+                );
+              })}
             </div>
           ))}
           </div>
@@ -197,6 +217,8 @@ function AddMemberForm({
     firstName: "",
     lastName: "",
     phone: "",
+    birthday: "",
+    photoUrl: "",
     status: "visitor" as MemberStatus,
     familyId: "" as string,
     newFamilyName: "",
@@ -231,6 +253,8 @@ function AddMemberForm({
           firstName: form.firstName,
           lastName: form.lastName,
           phone: form.phone || null,
+          birthday: form.birthday || null,
+          photoUrl: form.photoUrl || null,
           status: form.status,
           familyId,
         }),
@@ -272,6 +296,19 @@ function AddMemberForm({
           placeholder="Telefono"
           value={form.phone}
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
+        <input
+          type="date"
+          placeholder="Cumpleaños"
+          value={form.birthday}
+          onChange={(e) => setForm({ ...form, birthday: e.target.value })}
+          className="w-full border rounded-lg px-3 py-2 text-sm"
+        />
+        <input
+          placeholder="URL de foto (opcional)"
+          value={form.photoUrl}
+          onChange={(e) => setForm({ ...form, photoUrl: e.target.value })}
           className="w-full border rounded-lg px-3 py-2 text-sm"
         />
 

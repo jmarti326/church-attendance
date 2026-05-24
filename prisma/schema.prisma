@@ -24,6 +24,8 @@ model Member {
   lastName          String
   phone             String?
   address           String?
+  birthday          DateTime?
+  photoUrl          String?
   status            String             @default("member") // member, visitor, members_class, inactive
   familyId          Int?
   family            Family?            @relation(fields: [familyId], references: [id], onDelete: SetNull)

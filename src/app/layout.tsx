@@ -5,6 +5,7 @@ import { BottomNav } from "@/components/BottomNav";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthGuard } from "@/components/AuthGuard";
 import { VersionChecker } from "@/components/VersionChecker";
+import { SyncIndicator } from "@/components/SyncIndicator";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthGuard>
             <VersionChecker />
+            <SyncIndicator />
             <BottomNav />
             <main className="flex-1 lg:ml-56">{children}</main>
           </AuthGuard>

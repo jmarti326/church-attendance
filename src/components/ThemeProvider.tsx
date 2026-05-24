@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react";
 
-export type ThemeName = "rosa" | "lavanda" | "menta" | "melocoton" | "default";
+export type ThemeName = "rosa" | "lavanda" | "menta" | "melocoton" | "default" | "oscuro";
 
 export interface Theme {
   name: ThemeName;
@@ -21,6 +21,12 @@ export interface Theme {
   checkColor: string;
   buttonGradient: string;
   themeColor: string;
+  pageBg: string;
+  cardBg: string;
+  textColor: string;
+  textMuted: string;
+  inputBg: string;
+  inputBorder: string;
 }
 
 export const themes: Record<ThemeName, Theme> = {
@@ -41,6 +47,12 @@ export const themes: Record<ThemeName, Theme> = {
     checkColor: "rgb(219, 39, 119)",
     buttonGradient: "linear-gradient(135deg, rgb(236, 72, 153), rgb(219, 39, 119))",
     themeColor: "#db2777",
+    pageBg: "rgb(249, 250, 251)",
+    cardBg: "rgb(255, 255, 255)",
+    textColor: "rgb(17, 24, 39)",
+    textMuted: "rgb(107, 114, 128)",
+    inputBg: "rgb(255, 255, 255)",
+    inputBorder: "rgb(209, 213, 219)",
   },
   lavanda: {
     name: "lavanda",
@@ -59,6 +71,12 @@ export const themes: Record<ThemeName, Theme> = {
     checkColor: "rgb(124, 58, 237)",
     buttonGradient: "linear-gradient(135deg, rgb(139, 92, 246), rgb(124, 58, 237))",
     themeColor: "#7c3aed",
+    pageBg: "rgb(249, 250, 251)",
+    cardBg: "rgb(255, 255, 255)",
+    textColor: "rgb(17, 24, 39)",
+    textMuted: "rgb(107, 114, 128)",
+    inputBg: "rgb(255, 255, 255)",
+    inputBorder: "rgb(209, 213, 219)",
   },
   menta: {
     name: "menta",
@@ -77,6 +95,12 @@ export const themes: Record<ThemeName, Theme> = {
     checkColor: "rgb(13, 148, 136)",
     buttonGradient: "linear-gradient(135deg, rgb(20, 184, 166), rgb(13, 148, 136))",
     themeColor: "#0d9488",
+    pageBg: "rgb(249, 250, 251)",
+    cardBg: "rgb(255, 255, 255)",
+    textColor: "rgb(17, 24, 39)",
+    textMuted: "rgb(107, 114, 128)",
+    inputBg: "rgb(255, 255, 255)",
+    inputBorder: "rgb(209, 213, 219)",
   },
   melocoton: {
     name: "melocoton",
@@ -95,6 +119,12 @@ export const themes: Record<ThemeName, Theme> = {
     checkColor: "rgb(234, 88, 12)",
     buttonGradient: "linear-gradient(135deg, rgb(249, 115, 22), rgb(234, 88, 12))",
     themeColor: "#ea580c",
+    pageBg: "rgb(249, 250, 251)",
+    cardBg: "rgb(255, 255, 255)",
+    textColor: "rgb(17, 24, 39)",
+    textMuted: "rgb(107, 114, 128)",
+    inputBg: "rgb(255, 255, 255)",
+    inputBorder: "rgb(209, 213, 219)",
   },
   default: {
     name: "default",
@@ -113,6 +143,36 @@ export const themes: Record<ThemeName, Theme> = {
     checkColor: "rgb(34, 197, 94)",
     buttonGradient: "linear-gradient(135deg, rgb(99, 102, 241), rgb(79, 70, 229))",
     themeColor: "#4f46e5",
+    pageBg: "rgb(249, 250, 251)",
+    cardBg: "rgb(255, 255, 255)",
+    textColor: "rgb(17, 24, 39)",
+    textMuted: "rgb(107, 114, 128)",
+    inputBg: "rgb(255, 255, 255)",
+    inputBorder: "rgb(209, 213, 219)",
+  },
+  oscuro: {
+    name: "oscuro",
+    label: "Oscuro",
+    emoji: "🌙",
+    primary: "rgb(129, 140, 248)",
+    primaryHover: "rgb(165, 180, 252)",
+    primaryLight: "rgb(30, 27, 75)",
+    primaryBorder: "rgb(67, 56, 202)",
+    accent: "rgb(139, 92, 246)",
+    navBg: "rgb(17, 24, 39)",
+    navBorder: "rgb(55, 65, 81)",
+    headerBg: "rgb(17, 24, 39)",
+    presentBg: "rgb(6, 78, 59)",
+    presentBorder: "rgb(5, 150, 105)",
+    checkColor: "rgb(52, 211, 153)",
+    buttonGradient: "linear-gradient(135deg, rgb(139, 92, 246), rgb(99, 102, 241))",
+    themeColor: "#1f2937",
+    pageBg: "rgb(3, 7, 18)",
+    cardBg: "rgb(17, 24, 39)",
+    textColor: "rgb(243, 244, 246)",
+    textMuted: "rgb(156, 163, 175)",
+    inputBg: "rgb(31, 41, 55)",
+    inputBorder: "rgb(75, 85, 99)",
   },
 };
 
@@ -160,6 +220,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     root.style.setProperty("--theme-present-border", theme.presentBorder);
     root.style.setProperty("--theme-check", theme.checkColor);
     root.style.setProperty("--theme-button-gradient", theme.buttonGradient);
+    root.style.setProperty("--theme-page-bg", theme.pageBg);
+    root.style.setProperty("--theme-card-bg", theme.cardBg);
+    root.style.setProperty("--theme-text", theme.textColor);
+    root.style.setProperty("--theme-text-muted", theme.textMuted);
+    root.style.setProperty("--theme-input-bg", theme.inputBg);
+    root.style.setProperty("--theme-input-border", theme.inputBorder);
     // Update meta theme-color
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", theme.themeColor);

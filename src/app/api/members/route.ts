@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
       lastName: body.lastName,
       phone: body.phone || null,
       address: body.address || null,
+      birthday: body.birthday ? new Date(body.birthday) : null,
+      photoUrl: body.photoUrl || null,
       status: body.status || "member",
       familyId: body.familyId || null,
     },
