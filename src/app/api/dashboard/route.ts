@@ -38,7 +38,7 @@ async function getSundayStats(date: Date) {
 
   // Get active member count
   const activeMembers = await prisma.member.count({
-    where: { status: { notIn: ["inactive", "pastor", "fallecido"] } },
+    where: { status: { notIn: ["inactive", "fallecido"] } },
   });
 
   // Get previous Sunday's attendance
@@ -80,7 +80,7 @@ async function getSundayStats(date: Date) {
   if (familyIds.length > 0) {
     const familyCounts = await prisma.member.groupBy({
       by: ["familyId"],
-      where: { familyId: { in: familyIds }, status: { notIn: ["inactive", "pastor", "fallecido"] } },
+      where: { familyId: { in: familyIds }, status: { notIn: ["inactive", "fallecido"] } },
       _count: true,
     });
     for (const fc of familyCounts) {
@@ -131,7 +131,7 @@ async function getMonthStats(date: Date) {
   });
 
   const activeMembers = await prisma.member.count({
-    where: { status: { notIn: ["inactive", "pastor", "fallecido"] } },
+    where: { status: { notIn: ["inactive", "fallecido"] } },
   });
 
   // Previous month for comparison
@@ -201,7 +201,7 @@ async function getYearStats(date: Date) {
   });
 
   const activeMembers = await prisma.member.count({
-    where: { status: { notIn: ["inactive", "pastor", "fallecido"] } },
+    where: { status: { notIn: ["inactive", "fallecido"] } },
   });
 
   // Group by month
@@ -248,7 +248,7 @@ async function getYearStats(date: Date) {
   if (totalSundays >= 4) {
     const memberIds = Object.keys(memberAttendanceCounts).map(Number);
     const membersData = await prisma.member.findMany({
-      where: { id: { in: memberIds }, status: { notIn: ["inactive", "pastor", "fallecido"] } },
+      where: { id: { in: memberIds }, status: { notIn: ["inactive", "fallecido"] } },
       select: { id: true, firstName: true, lastName: true },
     });
 

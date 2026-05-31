@@ -47,7 +47,7 @@ export default function AttendancePage() {
   }, []);
 
   const activeMembers = useMemo(
-    () => members.filter((m) => m.status !== "inactive" && m.status !== "pastor" && m.status !== "fallecido"),
+    () => members.filter((m) => m.status !== "inactive" && m.status !== "fallecido"),
     [members]
   );
 
