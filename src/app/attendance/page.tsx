@@ -197,7 +197,7 @@ export default function AttendancePage() {
           <div className="lg:grid lg:grid-cols-2 xl:grid-cols-3 lg:gap-3">
           {grouped.map((familyMembers) => {
             const familyKey = familyMembers.map((m) => m.id).join("-");
-            const isFamily = familyMembers.length > 1;
+            const isFamily = !!familyMembers[0].familyId;
             const familyName = getFamilyName(familyMembers[0].familyId);
             const allPresent = familyMembers.every((m) => presentIds.has(m.serverId || m.id!));
 
