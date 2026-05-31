@@ -1,5 +1,6 @@
 {
   "name": "church-attendance",
+  "description": "🐑 Project Shepherd — A mobile-friendly PWA for tracking church attendance",
   "version": "1.0.0",
   "private": true,
   "scripts": {

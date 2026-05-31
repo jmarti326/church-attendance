@@ -1,4 +1,4 @@
-# Church Attendance PWA
+# 🐑 Project Shepherd — Church Attendance PWA
 
 A mobile-friendly Progressive Web App for tracking church attendance every Sunday. Built with Next.js, Tailwind CSS, and Prisma + PostgreSQL.
 
