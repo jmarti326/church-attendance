@@ -2,10 +2,11 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { StatusBadge, type MemberStatus } from "@/components/StatusBadge";
-import { useMembers, useAttendance } from "@/lib/hooks";
+import { useMembers, useAttendance, useVisitorCount } from "@/lib/hooks";
 import { useTheme } from "@/components/ThemeProvider";
 import { ThemePicker } from "@/components/ThemePicker";
 import { LogoutButton } from "@/components/LogoutButton";
+import { VisitorStepper } from "@/components/VisitorStepper";
 
 interface Member {
   id?: number;
@@ -37,6 +38,7 @@ export default function AttendancePage() {
   const [families, setFamilies] = useState<Family[]>([]);
   const { members, loading: membersLoading, syncStatus, isOnline, triggerSync } = useMembers();
   const { presentIds, loading: attendanceLoading, toggle, saveAttendance, lastSaved } = useAttendance(date);
+  const { count: visitorCount, notes: visitorNotes, increment, decrement, saveVisitorCount, setNotes: setVisitorNotes } = useVisitorCount(date);
   const [saving, setSaving] = useState(false);
   const { theme } = useTheme();
 
@@ -108,7 +110,7 @@ export default function AttendancePage() {
           <h1 className="text-lg font-bold text-gray-900">Asistencia</h1>
           <div className="flex items-center gap-2">
             <span className="text-sm font-semibold" style={{ color: theme.primary }}>
-              {presentIds.size} presentes
+              {presentIds.size} + {visitorCount} 👥
             </span>
             <button
               onClick={triggerSync}
@@ -271,6 +273,20 @@ export default function AttendancePage() {
         </div>
       )}
 
+      {/* Visitor stepper */}
+      {!loading && (
+        <VisitorStepper
+          count={visitorCount}
+          notes={visitorNotes}
+          onIncrement={increment}
+          onDecrement={decrement}
+          onNotesChange={(newNotes) => {
+            setVisitorNotes(newNotes);
+            saveVisitorCount(visitorCount, newNotes);
+          }}
+        />
+      )}
+
       {/* Save button */}
       <div className="fixed bottom-16 lg:bottom-0 left-0 lg:left-56 right-0 p-4 bg-gradient-to-t from-white via-white">
         <div className="max-w-5xl mx-auto">
@@ -280,7 +296,7 @@ export default function AttendancePage() {
             className="w-full text-white font-semibold py-3 rounded-xl shadow-lg disabled:opacity-50 active:scale-[0.98] transition-transform"
             style={{ background: theme.buttonGradient }}
           >
-            {saving ? "Guardando..." : `Guardar Asistencia (${presentIds.size})`}
+            {saving ? "Guardando..." : `Guardar Asistencia (${presentIds.size} + ${visitorCount} visitantes)`}
           </button>
           {lastSaved && (
             <p className="text-center text-xs mt-1 text-gray-500">

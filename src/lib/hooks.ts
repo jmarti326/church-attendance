@@ -145,3 +145,55 @@ export function useAttendance(date: string) {
 
   return { presentIds, loading, toggle, saveAttendance, lastSaved };
 }
+
+export function useVisitorCount(date: string) {
+  const [count, setCount] = useState(0);
+  const [notes, setNotes] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const loadVisitorCount = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`/api/attendance/visitors?date=${date}`);
+      const data = await res.json();
+      setCount(data.count ?? 0);
+      setNotes(data.notes ?? null);
+    } catch {
+      // Keep defaults
+    }
+    setLoading(false);
+  }, [date]);
+
+  useEffect(() => {
+    loadVisitorCount();
+  }, [loadVisitorCount]);
+
+  const saveVisitorCount = useCallback(
+    async (newCount: number, newNotes?: string | null) => {
+      setCount(newCount);
+      setNotes(newNotes ?? null);
+      try {
+        await fetch("/api/attendance/visitors", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date, count: newCount, notes: newNotes ?? null }),
+        });
+      } catch {
+        // Will retry on next save
+      }
+    },
+    [date]
+  );
+
+  const increment = useCallback(() => {
+    const newCount = count + 1;
+    saveVisitorCount(newCount, notes);
+  }, [count, notes, saveVisitorCount]);
+
+  const decrement = useCallback(() => {
+    const newCount = Math.max(0, count - 1);
+    saveVisitorCount(newCount, notes);
+  }, [count, notes, saveVisitorCount]);
+
+  return { count, notes, loading, setNotes, increment, decrement, saveVisitorCount };
+}

@@ -32,6 +32,7 @@ async function getSundayStats(date: Date) {
     where: { date: { gte: startOfDay, lte: endOfDay } },
     include: {
       attendances: { include: { member: { include: { family: true } } } },
+      visitorCount: true,
     },
   });
 
@@ -54,6 +55,7 @@ async function getSundayStats(date: Date) {
   });
 
   const presentCount = record?.attendances.length || 0;
+  const anonymousVisitors = record?.visitorCount?.count || 0;
   const prevCount = prevRecord?.attendances.length || 0;
   const attendanceRate = activeMembers > 0 ? Math.round((presentCount / activeMembers) * 100) : 0;
 
@@ -99,6 +101,8 @@ async function getSundayStats(date: Date) {
     view: "sunday",
     date: date.toISOString().split("T")[0],
     presentCount,
+    anonymousVisitors,
+    totalAttendance: presentCount + anonymousVisitors,
     activeMembers,
     attendanceRate,
     prevSundayCount: prevCount,
@@ -120,10 +124,9 @@ async function getMonthStats(date: Date) {
   const startOfMonth = new Date(year, month, 1);
   const endOfMonth = new Date(year, month + 1, 0, 23, 59, 59, 999);
 
-  // All attendance records in this month
   const records = await prisma.attendanceRecord.findMany({
     where: { date: { gte: startOfMonth, lte: endOfMonth } },
-    include: { attendances: true },
+    include: { attendances: true, visitorCount: true },
     orderBy: { date: "asc" },
   });
 
@@ -142,6 +145,8 @@ async function getMonthStats(date: Date) {
   const sundays = records.map((r) => ({
     date: r.date.toISOString().split("T")[0],
     count: r.attendances.length,
+    anonymousVisitors: r.visitorCount?.count || 0,
+    total: r.attendances.length + (r.visitorCount?.count || 0),
     rate: activeMembers > 0 ? Math.round((r.attendances.length / activeMembers) * 100) : 0,
   }));
 

@@ -37,10 +37,21 @@ model Member {
 }
 
 model AttendanceRecord {
-  id          Int          @id @default(autoincrement())
-  date        DateTime
-  attendances Attendance[]
-  createdAt   DateTime     @default(now())
+  id            Int            @id @default(autoincrement())
+  date          DateTime
+  attendances   Attendance[]
+  visitorCount  VisitorCount?
+  createdAt     DateTime       @default(now())
+}
+
+model VisitorCount {
+  id        Int              @id @default(autoincrement())
+  recordId  Int              @unique
+  record    AttendanceRecord @relation(fields: [recordId], references: [id], onDelete: Cascade)
+  count     Int              @default(0)
+  notes     String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
 }
 
 model Attendance {
