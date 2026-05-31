@@ -103,7 +103,7 @@ export default function AttendancePage() {
   };
 
   return (
-    <div className="pb-24 max-w-5xl mx-auto">
+    <div className="pb-40 max-w-5xl mx-auto">
       {/* Header */}
       <div className="sticky top-0 z-10 border-b px-4 py-3 shadow-sm" style={{ backgroundColor: theme.headerBg }}>
         <div className="flex items-center justify-between mb-2">
