@@ -2,7 +2,8 @@
 
 import VisitorFollowUp from "@/components/VisitorFollowUp";
 import { UpcomingBirthdays } from "@/components/UpcomingBirthdays";
-import { useState, useEffect, useCallback } from "react";
+import { shareReportPdf } from "@/lib/report-pdf";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 type View = "sunday" | "month" | "year";
 
@@ -57,6 +58,9 @@ export default function DashboardPage() {
   const [date, setDate] = useState(() => new Date().toISOString().split("T")[0]);
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [pdfMessage, setPdfMessage] = useState("");
+  const reportRef = useRef<HTMLDivElement>(null);
 
   const fetchData = useCallback(async () => {
     try {
@@ -75,6 +79,48 @@ export default function DashboardPage() {
 
     return () => window.clearTimeout(timeoutId);
   }, [fetchData]);
+
+  const reportPeriod =
+    view === "month"
+      ? new Date(`${date.substring(0, 7)}-01T12:00:00`).toLocaleDateString("es", {
+          month: "long",
+          year: "numeric",
+        })
+      : date.substring(0, 4);
+
+  const handleSharePdf = async () => {
+    if (!reportRef.current || (view !== "month" && view !== "year")) return;
+
+    setExportingPdf(true);
+    setPdfMessage("");
+
+    try {
+      const monthly = view === "month";
+      const filename = monthly
+        ? `reporte-mensual-${date.substring(0, 7)}.pdf`
+        : `reporte-anual-${date.substring(0, 4)}.pdf`;
+      const title = monthly
+        ? `Reporte mensual - ${reportPeriod}`
+        : `Reporte anual - ${reportPeriod}`;
+      const result = await shareReportPdf({
+        element: reportRef.current,
+        filename,
+        title,
+        shareText: `Reporte de asistencia de ${reportPeriod}`,
+      });
+
+      if (result === "downloaded") {
+        setPdfMessage("PDF descargado y listo para compartir.");
+      } else if (result === "shared") {
+        setPdfMessage("PDF compartido.");
+      }
+    } catch (error) {
+      console.error("PDF report generation failed", error);
+      setPdfMessage("No se pudo generar el PDF. Inténtalo nuevamente.");
+    } finally {
+      setExportingPdf(false);
+    }
+  };
 
   return (
     <div className="pb-20 max-w-5xl mx-auto">
@@ -143,6 +189,23 @@ export default function DashboardPage() {
             ))}
           </select>
         )}
+        {(view === "month" || view === "year") && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => void handleSharePdf()}
+              disabled={loading || exportingPdf}
+              className="w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {exportingPdf ? "Generando PDF..." : "Compartir PDF"}
+            </button>
+            {pdfMessage && (
+              <p className="mt-1 text-center text-xs text-gray-500" role="status">
+                {pdfMessage}
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -154,10 +217,26 @@ export default function DashboardPage() {
         <>
           {data?.view === "sunday" ? (
             <SundayView data={data} />
-          ) : data?.view === "month" ? (
-            <MonthView data={data} />
-          ) : data?.view === "year" ? (
-            <YearView data={data} />
+          ) : data?.view === "month" || data?.view === "year" ? (
+            <div ref={reportRef} className="bg-gray-50">
+              <div data-pdf-section className="bg-white px-4 py-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
+                  Project Shepherd
+                </p>
+                <h2 className="mt-1 text-2xl font-bold text-gray-900">
+                  {data.view === "month" ? "Reporte mensual" : "Reporte anual"}
+                </h2>
+                <p className="mt-1 capitalize text-sm text-gray-500">{reportPeriod}</p>
+                <p className="mt-1 text-xs text-gray-400">
+                  Generado el {new Date().toLocaleDateString("es")}
+                </p>
+              </div>
+              {data.view === "month" ? (
+                <MonthView data={data} />
+              ) : (
+                <YearView data={data} />
+              )}
+            </div>
           ) : null}
           <VisitorFollowUp />
           <UpcomingBirthdays />
@@ -262,7 +341,7 @@ function MonthView({ data }: { data: MonthData }) {
   return (
     <div className="p-4 space-y-4">
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3">
+      <div data-pdf-section className="grid grid-cols-2 gap-3">
         <KpiCard label="Promedio Semanal" value={data.average} trend={data.change} sub={`vs ${data.prevMonthAverage} mes anterior`} />
         <KpiCard label="Tasa Promedio" value={`${data.averageRate}%`} sub={`de ${data.activeMembers} activos`} />
         <KpiCard label="Asistentes Únicos" value={data.uniqueAttendees} sub={`en ${data.totalSundays} domingos`} />
@@ -271,7 +350,7 @@ function MonthView({ data }: { data: MonthData }) {
 
       {/* Bar chart */}
       {data.sundays.length > 0 && (
-        <div className="bg-white rounded-xl border p-4">
+        <div data-pdf-section className="bg-white rounded-xl border p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">Asistencia por Domingo</h3>
           <div className="space-y-2">
             {data.sundays.map((s) => (
@@ -306,7 +385,7 @@ function YearView({ data }: { data: YearData }) {
   return (
     <div className="p-4 space-y-4">
       {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3">
+      <div data-pdf-section className="grid grid-cols-2 gap-3">
         <KpiCard label="Promedio Anual" value={data.yearAverage} trend={data.change} sub={`vs ${data.prevYearAverage} año anterior`} />
         <KpiCard label="Asistentes Únicos" value={data.uniqueAttendees} sub={`de ${data.activeMembers} activos`} />
         <KpiCard label="Domingos Registrados" value={data.totalSundays} />
@@ -314,7 +393,7 @@ function YearView({ data }: { data: YearData }) {
       </div>
 
       {/* Monthly trend chart */}
-      <div className="bg-white rounded-xl border p-4">
+      <div data-pdf-section className="bg-white rounded-xl border p-4">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">Tendencia Mensual</h3>
         <div className="flex items-end gap-1 h-32">
           {data.monthlyData.map((m) => (
@@ -339,7 +418,7 @@ function YearView({ data }: { data: YearData }) {
 
       {/* Most consistent */}
       {data.consistent.length > 0 && (
-        <div className="bg-white rounded-xl border p-4">
+        <div data-pdf-section className="bg-white rounded-xl border p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">⭐ Más Consistentes</h3>
           <div className="space-y-1.5">
             {data.consistent.map((m) => (
@@ -354,7 +433,7 @@ function YearView({ data }: { data: YearData }) {
 
       {/* At risk */}
       {data.atRisk.length > 0 && (
-        <div className="bg-white rounded-xl border p-4">
+        <div data-pdf-section className="bg-white rounded-xl border p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-2">⚠️ Necesitan Seguimiento</h3>
           <p className="text-xs text-gray-400 mb-2">Asistencia menor al 30%</p>
           <div className="space-y-1.5">
