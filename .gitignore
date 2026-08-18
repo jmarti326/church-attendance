@@ -45,8 +45,3 @@ next-env.d.ts
 
 # database
 *.db
-
-# PWA generated
-public/sw.js
-public/workbox-*.js
-public/sw.js.map

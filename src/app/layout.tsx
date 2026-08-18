@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import { AuthGuard } from "@/components/AuthGuard";
 import { VersionChecker } from "@/components/VersionChecker";
 import { SyncIndicator } from "@/components/SyncIndicator";
+import { ServiceWorkerRegistration } from "@/components/ServiceWorkerRegistration";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -39,6 +40,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${geistSans.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col bg-gray-50 font-[family-name:var(--font-geist-sans)]">
+        <ServiceWorkerRegistration />
         <ThemeProvider>
           <AuthGuard>
             <VersionChecker />
