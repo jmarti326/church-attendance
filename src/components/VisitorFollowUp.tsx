@@ -115,7 +115,11 @@ export default function VisitorFollowUp() {
   }, []);
 
   return (
-    <div className="px-4 pb-4">
+    <div
+      data-pdf-section
+      data-pdf-loading={loading ? "true" : "false"}
+      className="px-4 pb-4"
+    >
       <div
         className="rounded-2xl border p-4 shadow-sm"
         style={{ backgroundColor: "var(--theme-card-bg)", borderColor: "color-mix(in srgb, var(--theme-primary) 16%, #e5e7eb)" }}

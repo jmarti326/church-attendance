@@ -24,18 +24,30 @@ function downloadFile(file: File) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+async function waitForReportContent(element: HTMLElement) {
+  const deadline = Date.now() + 10000;
+  while (
+    element.querySelector('[data-pdf-loading="true"]') &&
+    Date.now() < deadline
+  ) {
+    await new Promise((resolve) => window.setTimeout(resolve, 100));
+  }
+}
+
 export async function shareReportPdf({
   element,
   filename,
   title,
   shareText,
 }: ShareReportPdfOptions): Promise<ShareReportPdfResult> {
-  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+  const [{ default: html2canvas }, { jsPDF }, { autoTable }] = await Promise.all([
     import("html2canvas-pro"),
     import("jspdf"),
+    import("jspdf-autotable"),
   ]);
 
   await document.fonts.ready;
+  await waitForReportContent(element);
 
   const report = element.cloneNode(true) as HTMLElement;
   Object.assign(report.style, {
@@ -66,7 +78,9 @@ export async function shareReportPdf({
     const contentWidth = PDF_WIDTH_MM - PDF_MARGIN_MM * 2;
     const contentHeight = PDF_HEIGHT_MM - PDF_MARGIN_MM * 2;
     const sections = Array.from(
-      report.querySelectorAll<HTMLElement>("[data-pdf-section]"),
+      report.querySelectorAll<HTMLElement>(
+        "[data-pdf-section], [data-pdf-table-section]",
+      ),
     );
     const elements = sections.length > 0 ? sections : [report];
     let cursorY = PDF_MARGIN_MM;
@@ -81,6 +95,82 @@ export async function shareReportPdf({
     };
 
     for (const section of elements) {
+      if (section.hasAttribute("data-pdf-table-section")) {
+        const table = section.querySelector<HTMLTableElement>("[data-pdf-table]");
+        if (!table) continue;
+
+        if (hasContent && cursorY + 24 > PDF_HEIGHT_MM - PDF_MARGIN_MM) {
+          addPage();
+        } else if (!hasContent) {
+          hasContent = true;
+        }
+
+        const sectionTitle = section.dataset.pdfTitle || "Detalle de asistencia";
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(12);
+        pdf.setTextColor(31, 41, 55);
+        pdf.text(sectionTitle, PDF_MARGIN_MM, cursorY + 4);
+        cursorY += 8;
+
+        autoTable(pdf, {
+          html: table,
+          startY: cursorY,
+          margin: {
+            top: 18,
+            right: PDF_MARGIN_MM,
+            bottom: PDF_MARGIN_MM,
+            left: PDF_MARGIN_MM,
+          },
+          theme: "grid",
+          showHead: "everyPage",
+          horizontalPageBreak: true,
+          horizontalPageBreakRepeat: 0,
+          horizontalPageBreakBehaviour: "immediately",
+          styles: {
+            font: "helvetica",
+            fontSize: 7,
+            cellPadding: 1.5,
+            halign: "center",
+            valign: "middle",
+            lineColor: [226, 232, 240],
+            lineWidth: 0.1,
+            textColor: [55, 65, 81],
+          },
+          headStyles: {
+            fillColor: [79, 70, 229],
+            textColor: [255, 255, 255],
+            fontStyle: "bold",
+          },
+          alternateRowStyles: {
+            fillColor: [248, 250, 252],
+          },
+          columnStyles: {
+            0: {
+              cellWidth: 55,
+              halign: "left",
+              fontStyle: "bold",
+            },
+          },
+          willDrawPage: (data) => {
+            if (data.pageNumber === 1) return;
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(10);
+            pdf.setTextColor(79, 70, 229);
+            pdf.text(
+              `${sectionTitle} (continuación)`,
+              PDF_MARGIN_MM,
+              PDF_MARGIN_MM,
+            );
+          },
+        });
+
+        const tableState = (
+          pdf as unknown as { lastAutoTable?: { finalY?: number } }
+        ).lastAutoTable;
+        cursorY = (tableState?.finalY ?? PDF_MARGIN_MM) + PDF_GAP_MM;
+        continue;
+      }
+
       const reportRect = report.getBoundingClientRect();
       const sectionRect = section.getBoundingClientRect();
       const renderX =

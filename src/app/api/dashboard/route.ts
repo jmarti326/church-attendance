@@ -126,7 +126,16 @@ async function getMonthStats(date: Date) {
 
   const records = await prisma.attendanceRecord.findMany({
     where: { date: { gte: startOfMonth, lte: endOfMonth } },
-    include: { attendances: true, visitorCount: true },
+    include: {
+      attendances: {
+        include: {
+          member: {
+            select: { firstName: true, lastName: true },
+          },
+        },
+      },
+      visitorCount: true,
+    },
     orderBy: { date: "asc" },
   });
 
@@ -186,6 +195,10 @@ async function getMonthStats(date: Date) {
     newMembers,
     uniqueAttendees: uniqueAttendees.size,
     totalSundays: sundays.length,
+    attendanceMatrix: {
+      sundays: records.map((record) => record.date.toISOString().split("T")[0]),
+      attendees: buildAttendanceRows(records),
+    },
   };
 }
 
@@ -196,7 +209,15 @@ async function getYearStats(date: Date) {
 
   const records = await prisma.attendanceRecord.findMany({
     where: { date: { gte: startOfYear, lte: endOfYear } },
-    include: { attendances: true },
+    include: {
+      attendances: {
+        include: {
+          member: {
+            select: { firstName: true, lastName: true },
+          },
+        },
+      },
+    },
     orderBy: { date: "asc" },
   });
 
@@ -299,5 +320,69 @@ async function getYearStats(date: Date) {
     newMembers: newThisYear,
     prevYearAverage: prevYearAvg,
     change: prevYearAvg > 0 ? Math.round(((yearAvg - prevYearAvg) / prevYearAvg) * 100) : 0,
+    annualAttendance: buildAttendanceRows(records),
+    attendanceMonths: Array.from({ length: 12 }, (_, month) => {
+      const monthRecords = records.filter((record) => record.date.getMonth() === month);
+      if (monthRecords.length === 0) return null;
+
+      return {
+        month: `${year}-${String(month + 1).padStart(2, "0")}`,
+        label: new Date(year, month, 1).toLocaleDateString("es", {
+          month: "long",
+          year: "numeric",
+        }),
+        sundays: monthRecords.map((record) => record.date.toISOString().split("T")[0]),
+        attendees: buildAttendanceRows(monthRecords),
+      };
+    }).filter((month) => month !== null),
   };
+}
+
+interface AttendanceMatrixRecord {
+  date: Date;
+  attendances: {
+    memberId: number;
+    member: {
+      firstName: string;
+      lastName: string;
+    };
+  }[];
+}
+
+function buildAttendanceRows(records: AttendanceMatrixRecord[]) {
+  const attendees = new Map<
+    number,
+    { id: number; name: string; presentDates: Set<string> }
+  >();
+
+  for (const record of records) {
+    const date = record.date.toISOString().split("T")[0];
+    for (const attendance of record.attendances) {
+      const existing = attendees.get(attendance.memberId);
+      if (existing) {
+        existing.presentDates.add(date);
+        continue;
+      }
+
+      attendees.set(attendance.memberId, {
+        id: attendance.memberId,
+        name: `${attendance.member.firstName} ${attendance.member.lastName}`,
+        presentDates: new Set([date]),
+      });
+    }
+  }
+
+  const collator = new Intl.Collator("es", { sensitivity: "base" });
+  return Array.from(attendees.values())
+    .map((attendee) => ({
+      id: attendee.id,
+      name: attendee.name,
+      presentDates: Array.from(attendee.presentDates).sort(),
+      attendedCount: attendee.presentDates.size,
+      rate:
+        records.length > 0
+          ? Math.round((attendee.presentDates.size / records.length) * 100)
+          : 0,
+    }))
+    .sort((a, b) => collator.compare(a.name, b.name));
 }
