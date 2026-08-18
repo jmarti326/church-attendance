@@ -34,6 +34,7 @@ interface MonthData {
   newMembers: number;
   uniqueAttendees: number;
   totalSundays: number;
+  attendanceMatrix: AttendanceMatrixData;
 }
 
 interface YearData {
@@ -49,6 +50,24 @@ interface YearData {
   newMembers: number;
   prevYearAverage: number;
   change: number;
+  annualAttendance: AttendanceRow[];
+  attendanceMonths: (AttendanceMatrixData & {
+    month: string;
+    label: string;
+  })[];
+}
+
+interface AttendanceRow {
+  id: number;
+  name: string;
+  presentDates: string[];
+  attendedCount: number;
+  rate: number;
+}
+
+interface AttendanceMatrixData {
+  sundays: string[];
+  attendees: AttendanceRow[];
 }
 
 type DashboardData = SundayData | MonthData | YearData;
@@ -96,8 +115,12 @@ export default function DashboardPage() {
 
     try {
       const monthly = view === "month";
+      const reportDate = new Date(`${date.substring(0, 7)}-01T12:00:00`);
+      const monthName = reportDate
+        .toLocaleDateString("es", { month: "long" })
+        .toLocaleLowerCase("es");
       const filename = monthly
-        ? `reporte-mensual-${date.substring(0, 7)}.pdf`
+        ? `reporte-mensual-${monthName}-${date.substring(0, 4)}.pdf`
         : `reporte-anual-${date.substring(0, 4)}.pdf`;
       const title = monthly
         ? `Reporte mensual - ${reportPeriod}`
@@ -215,10 +238,14 @@ export default function DashboardPage() {
         </div>
       ) : (
         <>
-          {data?.view === "sunday" ? (
-            <SundayView data={data} />
-          ) : data?.view === "month" || data?.view === "year" ? (
-            <div ref={reportRef} className="bg-gray-50">
+          <div
+            ref={data?.view === "month" || data?.view === "year" ? reportRef : undefined}
+            className="bg-gray-50"
+          >
+            {data?.view === "sunday" ? (
+              <SundayView data={data} />
+            ) : data?.view === "month" || data?.view === "year" ? (
+              <>
               <div data-pdf-section className="bg-white px-4 py-5">
                 <p className="text-xs font-semibold uppercase tracking-wider text-indigo-600">
                   Project Shepherd
@@ -236,10 +263,13 @@ export default function DashboardPage() {
               ) : (
                 <YearView data={data} />
               )}
+              </>
+            ) : null}
+            <VisitorFollowUp />
+            <div className="px-4 pb-4">
+              <UpcomingBirthdays />
             </div>
-          ) : null}
-          <VisitorFollowUp />
-          <UpcomingBirthdays />
+          </div>
           <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: "var(--theme-card-bg)" }}>
             <h3 className="font-semibold mb-3" style={{ color: "var(--theme-text)" }}>📥 Exportar Datos</h3>
             <div className="flex gap-2">
@@ -282,6 +312,184 @@ function KpiCard({ label, value, sub, trend }: { label: string; value: string | 
       </div>
       {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
     </div>
+  );
+}
+
+function formatSunday(date: string) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString("es", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+function AttendanceMatrix({
+  title,
+  sundays,
+  attendees,
+}: {
+  title: string;
+  sundays: string[];
+  attendees: AttendanceRow[];
+}) {
+  if (sundays.length === 0 || attendees.length === 0) return null;
+
+  return (
+    <section
+      data-pdf-table-section
+      data-pdf-title={title}
+      className="overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm"
+    >
+      <div className="border-b border-indigo-100 bg-indigo-50 px-4 py-3">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-bold text-gray-800">{title}</h3>
+            <p className="mt-0.5 text-xs text-gray-500">
+              Asistentes en filas · domingos en columnas
+            </p>
+          </div>
+          <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-indigo-700">
+            {attendees.length} asistentes
+          </span>
+        </div>
+      </div>
+      <div className="overflow-x-auto">
+        <table
+          data-pdf-table
+          className="w-full border-collapse text-xs"
+          style={{ minWidth: `${Math.max(720, 330 + sundays.length * 78)}px` }}
+        >
+          <thead>
+            <tr className="bg-gray-50 text-gray-600">
+              <th className="sticky left-0 z-[1] min-w-56 border-b border-r border-gray-200 bg-gray-50 px-3 py-2 text-left font-semibold">
+                Asistente
+              </th>
+              {sundays.map((sunday) => (
+                <th
+                  key={sunday}
+                  className="min-w-16 border-b border-r border-gray-200 px-2 py-2 text-center font-semibold"
+                >
+                  {formatSunday(sunday)}
+                </th>
+              ))}
+              <th className="min-w-16 border-b border-r border-gray-200 px-2 py-2 text-center font-semibold">
+                Total
+              </th>
+              <th className="min-w-16 border-b border-gray-200 px-2 py-2 text-center font-semibold">
+                %
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {attendees.map((attendee, rowIndex) => {
+              const rowBackground = rowIndex % 2 === 0 ? "bg-white" : "bg-slate-50";
+              return (
+                <tr key={attendee.id} className={rowBackground}>
+                  <th
+                    className={`sticky left-0 z-[1] border-b border-r border-gray-100 px-3 py-2 text-left font-medium text-gray-800 ${rowBackground}`}
+                  >
+                    {attendee.name}
+                  </th>
+                  {sundays.map((sunday) => {
+                    const present = attendee.presentDates.includes(sunday);
+                    return (
+                      <td
+                        key={sunday}
+                        className="border-b border-r border-gray-100 px-2 py-1.5 text-center"
+                        aria-label={present ? "Presente" : "Ausente"}
+                      >
+                        <span
+                          className={`inline-flex h-6 w-6 items-center justify-center rounded-full font-bold ${
+                            present
+                              ? "bg-emerald-100 text-emerald-700"
+                              : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {present ? "Sí" : "—"}
+                        </span>
+                      </td>
+                    );
+                  })}
+                  <td className="border-b border-r border-gray-100 px-2 py-2 text-center font-semibold text-gray-700">
+                    {attendee.attendedCount}/{sundays.length}
+                  </td>
+                  <td className="border-b border-gray-100 px-2 py-2 text-center">
+                    <span
+                      className={`rounded-full px-2 py-1 font-semibold ${
+                        attendee.rate >= 80
+                          ? "bg-emerald-100 text-emerald-700"
+                          : attendee.rate >= 50
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-rose-100 text-rose-700"
+                      }`}
+                    >
+                      {attendee.rate}%
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
+function AnnualAttendanceSummary({
+  attendees,
+  totalSundays,
+}: {
+  attendees: AttendanceRow[];
+  totalSundays: number;
+}) {
+  if (attendees.length === 0) return null;
+
+  return (
+    <section
+      data-pdf-table-section
+      data-pdf-title="Resumen anual por asistente"
+      className="overflow-hidden rounded-xl border border-indigo-100 bg-white shadow-sm"
+    >
+      <div className="border-b border-indigo-100 bg-indigo-50 px-4 py-3">
+        <h3 className="text-sm font-bold text-gray-800">Resumen anual por asistente</h3>
+        <p className="mt-0.5 text-xs text-gray-500">
+          Total de domingos asistidos durante el año
+        </p>
+      </div>
+      <table data-pdf-table className="w-full border-collapse text-xs">
+        <thead>
+          <tr className="bg-gray-50 text-gray-600">
+            <th className="border-b border-r border-gray-200 px-3 py-2 text-left font-semibold">
+              Asistente
+            </th>
+            <th className="w-28 border-b border-r border-gray-200 px-3 py-2 text-center font-semibold">
+              Domingos
+            </th>
+            <th className="w-24 border-b border-gray-200 px-3 py-2 text-center font-semibold">
+              Asistencia
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendees.map((attendee, rowIndex) => (
+            <tr
+              key={attendee.id}
+              className={rowIndex % 2 === 0 ? "bg-white" : "bg-slate-50"}
+            >
+              <td className="border-b border-r border-gray-100 px-3 py-2 font-medium text-gray-800">
+                {attendee.name}
+              </td>
+              <td className="border-b border-r border-gray-100 px-3 py-2 text-center font-semibold text-gray-700">
+                {attendee.attendedCount}/{totalSundays}
+              </td>
+              <td className="border-b border-gray-100 px-3 py-2 text-center">
+                {attendee.rate}%
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </section>
   );
 }
 
@@ -374,6 +582,15 @@ function MonthView({ data }: { data: MonthData }) {
           </div>
         </div>
       )}
+
+      <AttendanceMatrix
+        title={`Detalle de asistencia · ${new Date(`${data.month}-01T12:00:00`).toLocaleDateString("es", {
+          month: "long",
+          year: "numeric",
+        })}`}
+        sundays={data.attendanceMatrix.sundays}
+        attendees={data.attendanceMatrix.attendees}
+      />
     </div>
   );
 }
@@ -446,6 +663,20 @@ function YearView({ data }: { data: YearData }) {
           </div>
         </div>
       )}
+
+      <AnnualAttendanceSummary
+        attendees={data.annualAttendance}
+        totalSundays={data.totalSundays}
+      />
+
+      {data.attendanceMonths.map((month) => (
+        <AttendanceMatrix
+          key={month.month}
+          title={`Asistencia · ${month.label}`}
+          sundays={month.sundays}
+          attendees={month.attendees}
+        />
+      ))}
     </div>
   );
 }

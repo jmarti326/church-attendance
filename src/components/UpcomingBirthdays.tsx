@@ -14,18 +14,21 @@ interface BirthdayMember {
 
 export function UpcomingBirthdays() {
   const [members, setMembers] = useState<BirthdayMember[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetch("/api/dashboard/birthdays")
       .then((r) => r.json())
       .then(setMembers)
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
+  if (loading) return <div data-pdf-loading="true" className="hidden" />;
   if (members.length === 0) return null;
 
   return (
-    <div className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: "var(--theme-card-bg)" }}>
+    <div data-pdf-section className="rounded-xl p-4 shadow-sm" style={{ backgroundColor: "var(--theme-card-bg)" }}>
       <h3 className="font-semibold mb-3 flex items-center gap-2" style={{ color: "var(--theme-text)" }}>
         🎂 Cumpleaños Próximos
       </h3>
