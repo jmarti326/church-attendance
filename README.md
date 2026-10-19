@@ -139,6 +139,19 @@ Deploys automatically via GitHub Actions on push to `master`.
 | `DATABASE_URL` | Neon PostgreSQL connection string |
 | `AUTH_SECRET` | JWT signing secret |
 
+## Dependency Security Maintenance
+
+Keep `next` and `eslint-config-next` on the same patched version and commit
+`package-lock.json` with dependency updates. Run `npm audit`, `npm run lint`,
+and `npm run build` before merging.
+
+The scoped overrides in `package.json` patch Prisma's pinned `mysql2` and
+`@prisma/config`'s `deepmerge-ts` dependencies without adopting a prerelease
+Prisma version. The application uses PostgreSQL, not MySQL, and its Prisma
+configuration uses plain objects rather than Maps (whose merge behavior changed
+in `deepmerge-ts` 8). Recheck these overrides when upgrading Prisma and remove
+them once its upstream dependencies include the fixes.
+
 ## Database
 
 ### Schema
